@@ -198,7 +198,9 @@ Carbon_summary_LFA <- AllYears_carbon %>%
             farm_output_Q3 = weighted.quantile(farm_output_kg, fbswt, 0.75)) %>% 
   mutate(type=10)
 Carbon_summary <- Carbon_summary %>% 
-  bind_rows(Carbon_summary_all, Carbon_summary_LFA)
+  bind_rows(Carbon_summary_all, Carbon_summary_LFA) %>% 
+  #Convert kg to tonnes for per hectare calculations
+  mutate_at(vars(starts_with("CO2e_per_ha")), function(x) x*0.001) 
 Carbon_summary <- Carbon_summary[order(Carbon_summary$sampyear),]
 
 
@@ -298,9 +300,9 @@ Nitrogen_summary <- Nitrogen_summary[order(Nitrogen_summary$sampyear), ]
 
 #Apply wordy formats
 Carbon_summary <- apply_type_formats(Carbon_summary) %>% 
-  select(sampyear, farmtype, everything(), -type,)
+  select(sampyear, farmtype, everything())
 Nitrogen_summary <- apply_type_formats(Nitrogen_summary) %>% 
-  select(sampyear, farmtype, everything(), -type)
+  select(sampyear, farmtype, everything())
 
 #Write Carbon and Nitrogen summaries to a CSV in the Z drive
 write.csv(Carbon_summary, file=paste0(Output_directory,"/Carbon_summary.csv"), row.names = FALSE)
