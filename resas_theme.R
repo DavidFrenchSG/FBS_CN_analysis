@@ -36,7 +36,9 @@ theme_resas <- theme_bw(base_size = 12) +
     plot.subtitle = element_text(family = "sans", size = 14, colour = "grey10"),
     plot.caption = element_text(family = "sans", size = 12, colour = "grey10"),
     strip.background = element_blank(),
-    strip.text = element_text(family = "sans", face = "bold", size = 12, colour = "black")
+    strip.text = element_text(family = "sans", face = "bold", size = 12, colour = "black"),
+    panel.spacing = unit(3, "cm"),
+    plot.margin = unit(c(0.5,0.5,0.5,0.5), "cm")
   )
 
 # Update theme used by default:
