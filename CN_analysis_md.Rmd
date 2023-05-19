@@ -1,8 +1,13 @@
 ---
 output:
   html_document:
-    number_sections: true
+    number_sections: false
 ---
+```{r banner,,echo=FALSE}
+# knitr::include_graphics(c("RESAS_logo_mg.jpg"),("Scottish_Government_logo_RGB.jpg"))
+
+```
+
 ```{r title, include=F}
 title <- title_var
 ```
@@ -18,87 +23,60 @@ options(scipen=999)
 options(knitr.kable.NA = '--')
 ```
 
-<!-- # All farm types -->
-```{r fig_all,eval=TRUE,echo=FALSE,message=FALSE, error=FALSE, warning=FALSE,fig.height=6}
-knitr::include_graphics(paste0(Output_directory,"/Charts/Farm Business Survey ", max(sampyear_range)-1,"-",max(sampyear_range)-2000," - Carbon and Nitrogen charts - ",fbs_type_words[9],".png"))
+
+```{r all_plots, echo=FALSE, message=FALSE, fig.width=10}
+for(i in Output_types){
+output_plot <- function(quantity_label, y_label){
+  output_plot <- ggplot(filter(Master_plots, `Farm type`==fbs_type_words[i], Quantity == quantity_label)) +
+    geom_col(aes(x=`Year`, y=Median), fill="#23A845") +
+    geom_point(aes(x=`Year`, y=Median)) +
+    geom_errorbar(aes(x=`Year`, ymin=Q1, ymax = Q3, width=0.25)) +
+    geom_hline(yintercept = 0,colour="grey90")+
+    xlab(element_blank())+
+    # facet_wrap(vars(facet_order), scales="free") +
+    # scale_x_discrete(guide = guide_axis(n.dodge=3))+
+    ylab(bquote(.(y_label)))
+  return(output_plot)
+}
+# Use the above function to create four plots, and then arrange in a grid.
+g_co2perha <- output_plot("t CO2-e per ha", "t CO"[2]~"-e / ha")
+g_co2perkg <- output_plot("kg CO2-e per kg output", "kg CO"[2]~"-e / kg output")
+g_Nsurplus <- output_plot("Nitrogen surplus (kg)", "kg N surplus / ha")
+g_NUE <- output_plot("Nitrogen use efficiency (%)", "NUE (%)")
+g_grid <- grid.arrange(g_co2perha, g_co2perkg, g_Nsurplus, g_NUE,
+                       top=textGrob(fbs_type_words[i],gp=gpar(fontsize=20,font=2),x=0,hjust=0))
+}
+
 ```
+
+```{r test}
+for (i in Output_types){
+output_plot <- function(quantity_label, y_label){
+  output_plot <- ggplot(filter(Master_plots, `Farm type`==fbs_type_words[i], Quantity == quantity_label)) +
+    geom_col(aes(x=`Year`, y=Median), fill="#23A845") +
+    geom_point(aes(x=`Year`, y=Median)) +
+    geom_errorbar(aes(x=`Year`, ymin=Q1, ymax = Q3, width=0.25)) +
+    geom_hline(yintercept = 0,colour="grey90")+
+    xlab(element_blank())+
+    # facet_wrap(vars(facet_order), scales="free") +
+    # scale_x_discrete(guide = guide_axis(n.dodge=3))+
+    ylab(bquote(.(y_label)))
+  return(output_plot)
+}
+# Use the above function to create four plots, and then arrange in a grid.
+g_co2perha <- output_plot("t CO2-e per ha", "t CO"[2]~"-e / ha")
+g_co2perkg <- output_plot("kg CO2-e per kg output", "kg CO"[2]~"-e / kg output")
+g_Nsurplus <- output_plot("Nitrogen surplus (kg)", "kg N surplus / ha")
+g_NUE <- output_plot("Nitrogen use efficiency (%)", "NUE (%)")
+g_grid <- grid.arrange(g_co2perha, g_co2perkg, g_Nsurplus, g_NUE,
+                       top=textGrob(fbs_type_words[i],gp=gpar(fontsize=20,font=2),x=0,hjust=0))
+}
+```
+
 [1] All farm types includes lowland cattle and sheep farms.
-<!-- # Cereal -->
-```{r fig_cereal,eval=TRUE,echo=FALSE,message=FALSE, error=FALSE, warning=FALSE,fig.height=6}
-
-knitr::include_graphics(paste0(Output_directory,"/Charts/Farm Business Survey ", max(sampyear_range)-1,"-",max(sampyear_range)-2000," - Carbon and Nitrogen charts - ",fbs_type_words[1],".png"))
-
-```
-
-<!-- # General Cropping -->
-```{r fig_GC,eval=TRUE,echo=FALSE,message=FALSE, error=FALSE, warning=FALSE,fig.height=6}
-
-knitr::include_graphics(paste0(Output_directory,"/Charts/Farm Business Survey ", max(sampyear_range)-1,"-",max(sampyear_range)-2000," - Carbon and Nitrogen charts - ",fbs_type_words[2],".png"))
-```
-
-<!-- # Dairy -->
-```{r fig_dairy,eval=TRUE,echo=FALSE,message=FALSE, error=FALSE, warning=FALSE,fig.height=6}
-
-knitr::include_graphics(paste0(Output_directory,"/Charts/Farm Business Survey ", max(sampyear_range)-1,"-",max(sampyear_range)-2000," - Carbon and Nitrogen charts - ",fbs_type_words[3],".png"))
-```
-
-<!-- # LFA livestock -->
-```{r fig_LFA,eval=TRUE,echo=FALSE,message=FALSE, error=FALSE, warning=FALSE,fig.height=6}
-
-knitr::include_graphics(paste0(Output_directory,"/Charts/Farm Business Survey ", max(sampyear_range)-1,"-",max(sampyear_range)-2000," - Carbon and Nitrogen charts - ",fbs_type_words[10],".png"))
-```
-
-<!-- # Mixed -->
-```{r fig_mixed, echo=FALSE,message=FALSE, error=FALSE, warning=FALSE, fig.show="hold", out.width="`100%"}
-
-knitr::include_graphics(paste0(Output_directory,"/Charts/Farm Business Survey ", max(sampyear_range)-1,"-",max(sampyear_range)-2000," - Carbon and Nitrogen charts - ",fbs_type_words[8],".png"))
-```
-
-<!-- <center>**Table 2** - FBS threshold farms in relation to the total census population by number of farms</center> -->
-<!-- ```{r Table_2, echo=FALSE} -->
-<!-- Table_2_out %>%  -->
-<!--   kable(format = "html", align = "lrrr", format.args = list(big.mark = ",")) %>%  -->
-<!--   kable_styling(position = "center",font_size = 14) %>%  -->
-<!--   add_header_above(c(" "=1,"Number of farms"=3), background = "#2c7b3e",color = "white", bold = T) %>%  -->
-<!--   row_spec(0, bold = TRUE, background = "#2c7b3e",color = "white", extra_css = "line-height: 20px; vertical-align: middle;") %>% -->
-<!--   row_spec(c(1:8,15), bold = TRUE) -->
-<!-- ``` -->
-<!-- --- -->
-
-<!-- <center>**Table 3** - FBS threshold farms in relation to the total census population by total area.</center> -->
-<!-- ```{r Table_3, echo=FALSE} -->
-<!-- Table_3_out %>%  -->
-<!--   kable(format = "html", align = "lrrr", format.args = list(big.mark = ",")) %>%  -->
-<!--   kable_styling(position = "center",font_size = 14) %>%  -->
-<!--   add_header_above(c(" "=1,"Total area (hectares)"=3), background = "#2c7b3e",color = "white", bold = T) %>%  -->
-<!--   row_spec(0, bold = TRUE, background = "#2c7b3e",color = "white", extra_css = "line-height: 20px; vertical-align: middle;") %>% -->
-<!--   row_spec(c(1:8,15), bold = TRUE) -->
-<!-- ``` -->
-<!-- --- -->
-
-<!-- <center>**Table 4** - FBS threshold farms in relation to the total census population by total workforce.</center> -->
-<!-- ```{r Table_4, echo=FALSE} -->
-<!-- Table_4_out %>%  -->
-<!--   kable(format = "html", align = "lrrr", format.args = list(big.mark = ",")) %>%  -->
-<!--   kable_styling(position = "center",font_size = 14) %>%  -->
-<!--   add_header_above(c(" "=1,"Total workforce"=3), background = "#2c7b3e",color = "white", bold = T) %>%  -->
-<!--   row_spec(0, bold = TRUE, background = "#2c7b3e",color = "white", extra_css = "line-height: 20px; vertical-align: middle;") %>% -->
-<!--   row_spec(c(1:8,15), bold = TRUE) -->
-<!-- ``` -->
-<!-- --- -->
-
-<!-- <center>**Table 5** - FBS threshold farms in relation to the total census population by standard output.</center> -->
-<!-- ```{r Table_5, echo=FALSE} -->
-<!-- Table_5_out %>%  -->
-<!--   kable(format = "html", align = "lrrr", format.args = list(big.mark = ",")) %>%  -->
-<!--   kable_styling(position = "center",font_size = 14) %>%  -->
-<!--   add_header_above(c(" "=1,"Standard output (£)"=3), background = "#2c7b3e",color = "white", bold = T) %>%  -->
-<!--   row_spec(0, bold = TRUE, background = "#2c7b3e",color = "white", extra_css = "line-height: 20px; vertical-align: middle;") %>% -->
-<!--   row_spec(c(1:8,15), bold = TRUE) -->
-<!-- ``` -->
-<!-- --- -->
 
 
+![](RESAS_logo_mg.jpg){width="7.8cm" style="float:left"}![](Scottish_Government_logo_RGB.jpg){width=7.3cm style="float:right; padding-top:0.4cm"}
 
 
 
