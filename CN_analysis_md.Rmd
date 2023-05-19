@@ -3,17 +3,22 @@ output:
   html_document:
     number_sections: false
 ---
-```{r banner,,echo=FALSE}
-# knitr::include_graphics(c("RESAS_logo_mg.jpg"),("Scottish_Government_logo_RGB.jpg"))
 
-```
-
-```{r title, include=F}
+```{r title, include=FALSE}
 title <- title_var
 ```
+
+<!-- Need the pipes in the next code chunk in order to cope with a colon in the title and to place the title on a separate line from the images -->
 ---
-title: `r title_var`
+title: | 
+  | ![](RESAS_logo_mg.jpg){width="7.8cm" style="float: left"}![](Scottish_Government_logo_RGB.jpg){width=7.3cm style="float: right; padding-top: 0.4cm"}
+  | 
+  | `r paste0(title_var)`
 ---
+
+# Summary
+Summary text could go here?
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(kableExtra)
@@ -23,60 +28,25 @@ options(scipen=999)
 options(knitr.kable.NA = '--')
 ```
 
-
 ```{r all_plots, echo=FALSE, message=FALSE, fig.width=10}
-for(i in Output_types){
-output_plot <- function(quantity_label, y_label){
-  output_plot <- ggplot(filter(Master_plots, `Farm type`==fbs_type_words[i], Quantity == quantity_label)) +
-    geom_col(aes(x=`Year`, y=Median), fill="#23A845") +
-    geom_point(aes(x=`Year`, y=Median)) +
-    geom_errorbar(aes(x=`Year`, ymin=Q1, ymax = Q3, width=0.25)) +
-    geom_hline(yintercept = 0,colour="grey90")+
-    xlab(element_blank())+
-    # facet_wrap(vars(facet_order), scales="free") +
-    # scale_x_discrete(guide = guide_axis(n.dodge=3))+
-    ylab(bquote(.(y_label)))
-  return(output_plot)
-}
-# Use the above function to create four plots, and then arrange in a grid.
-g_co2perha <- output_plot("t CO2-e per ha", "t CO"[2]~"-e / ha")
-g_co2perkg <- output_plot("kg CO2-e per kg output", "kg CO"[2]~"-e / kg output")
-g_Nsurplus <- output_plot("Nitrogen surplus (kg)", "kg N surplus / ha")
-g_NUE <- output_plot("Nitrogen use efficiency (%)", "NUE (%)")
-g_grid <- grid.arrange(g_co2perha, g_co2perkg, g_Nsurplus, g_NUE,
-                       top=textGrob(fbs_type_words[i],gp=gpar(fontsize=20,font=2),x=0,hjust=0))
-}
+for (i in Output_types) {
 
-```
-
-```{r test}
-for (i in Output_types){
-output_plot <- function(quantity_label, y_label){
-  output_plot <- ggplot(filter(Master_plots, `Farm type`==fbs_type_words[i], Quantity == quantity_label)) +
-    geom_col(aes(x=`Year`, y=Median), fill="#23A845") +
-    geom_point(aes(x=`Year`, y=Median)) +
-    geom_errorbar(aes(x=`Year`, ymin=Q1, ymax = Q3, width=0.25)) +
-    geom_hline(yintercept = 0,colour="grey90")+
-    xlab(element_blank())+
-    # facet_wrap(vars(facet_order), scales="free") +
-    # scale_x_discrete(guide = guide_axis(n.dodge=3))+
-    ylab(bquote(.(y_label)))
-  return(output_plot)
-}
-# Use the above function to create four plots, and then arrange in a grid.
-g_co2perha <- output_plot("t CO2-e per ha", "t CO"[2]~"-e / ha")
-g_co2perkg <- output_plot("kg CO2-e per kg output", "kg CO"[2]~"-e / kg output")
-g_Nsurplus <- output_plot("Nitrogen surplus (kg)", "kg N surplus / ha")
-g_NUE <- output_plot("Nitrogen use efficiency (%)", "NUE (%)")
-g_grid <- grid.arrange(g_co2perha, g_co2perkg, g_Nsurplus, g_NUE,
-                       top=textGrob(fbs_type_words[i],gp=gpar(fontsize=20,font=2),x=0,hjust=0))
+  # Use the output_plot function to create four plots, and then arrange in a grid.
+  # Input arguments are type, title, quantity and y-axis label
+  g_co2perha <- output_plot(i, "Absolute emissions", "t CO2-e per ha", "t CO"[2]~"-e / ha", "#23A845")
+  g_co2perkg <- output_plot(i, "Emission intensity", "kg CO2-e per kg output", "kg CO"[2]~"-e / kg output", "#23A845")
+  g_Nsurplus <- output_plot(i, "Nitrogen balance", "Nitrogen surplus (kg)", "kg N surplus / ha", "#80BA27")
+  g_NUE <- output_plot(i, "Nitrogen use efficiency", "Nitrogen use efficiency (%)", "NUE (%)", "#80BA27")
+  g_grid <- grid.arrange(g_co2perha, g_co2perkg, g_Nsurplus, g_NUE,
+                         top=textGrob(fbs_type_words[i],gp=gpar(fontsize=20,font=2),x=0,hjust=0))
+  
+  ## Next two lines used to create charts with no farmtype-titles, for dropping into powerpoint.
+  # g_grid_no_typetitle <- grid.arrange(g_co2perha, g_co2perkg, g_Nsurplus, g_NUE)
+  # ggsave(file=paste0(Output_directory,"/Charts/Farm Business Survey ", max(sampyear_range)-1,"-",max(sampyear_range)-2000," - Carbon and Nitrogen charts - ",fbs_type_words[i],".png"), plot=g_grid_no_typetitle, height=6,width=10)
 }
 ```
 
 [1] All farm types includes lowland cattle and sheep farms.
 
-
-![](RESAS_logo_mg.jpg){width="7.8cm" style="float:left"}![](Scottish_Government_logo_RGB.jpg){width=7.3cm style="float:right; padding-top:0.4cm"}
-
-
+![](RESAS_logo_mg.jpg){width="7.8cm" style="float: left"}![](Scottish_Government_logo_RGB.jpg){width=7.3cm style="float: right; padding-top: 0.4cm"}
 

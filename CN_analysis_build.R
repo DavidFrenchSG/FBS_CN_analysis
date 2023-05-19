@@ -2,14 +2,10 @@
 
 
 #Choose the range of *crop* years of interest here
+#The CN_analysis script will convert these to sampyears.
 cropyear_range <- (2019:2021)
 
-#These two variables automatically update based on crop_year. "year" is used for importing the census data.
-#"datayear" is used for importing the FBS data.
-
-#Variables for FBS thresholds. The exchange rate is from 2013, since that is when standard outputs were determined.
-
-title_var <- paste0("Farm Business Survey environmental data - by farm type")
+title_var <- "Farm Business Survey 2021-22: farm level emissions and nitrogen usage"
 source('CN_analysis.R')
 source('Plots.R')
 rmarkdown::render('CN_analysis_md.Rmd')

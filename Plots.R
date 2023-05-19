@@ -40,35 +40,29 @@ Master_plots <- Table_1_plot %>%
 Master_plots$facet_order = factor(Master_plots$Quantity, 
                                   levels = c("t CO2-e per ha", "kg CO2-e per kg output",
                                              "Nitrogen surplus (kg)", "Nitrogen use efficiency (%)"))
-for(i in Output_types){
-  # print(i)
-  # check <- filter(Master_plots, `Farm type`==fbs_type_words[i], Quantity == "t CO2-e per ha")
-  
-  g_co2perha <- ggplot(filter(Master_plots, `Farm type`==fbs_type_words[i], Quantity == "t CO2-e per ha")) +
+
+# Function for creating the four plots for each type
+# The input arguments are the type, quantity to be plotted, label for the y-axis and the rgb colour code.
+output_plot <- function(i, title_label, quantity_label, y_label, colour_code){
+  output_plot <- ggplot(filter(Master_plots, `Farm type`==fbs_type_words[i], Quantity == quantity_label)) +
+    geom_col(aes(x=`Year`, y=Median), fill=colour_code) +
     geom_point(aes(x=`Year`, y=Median)) +
     geom_errorbar(aes(x=`Year`, ymin=Q1, ymax = Q3, width=0.25)) +
     geom_hline(yintercept = 0,colour="grey90")+
+    xlab(element_blank())+
+    labs(title = title_label)+
     # facet_wrap(vars(facet_order), scales="free") +
-    ylab("t CO2-e per ha")
-  g_co2perkg <- ggplot(filter(Master_plots, `Farm type`==fbs_type_words[i], Quantity == "kg CO2-e per kg output")) +
-    geom_point(aes(x=`Year`, y=Median)) +
-    geom_errorbar(aes(x=`Year`, ymin=Q1, ymax = Q3, width=0.25)) +
-    geom_hline(yintercept = 0,colour="grey90") +
-    # facet_wrap(vars(facet_order), scales="free") +
-    ylab("kg CO2-e per kg output")  
-  g_Nsurplus <- ggplot(filter(Master_plots, `Farm type`==fbs_type_words[i], Quantity == "Nitrogen surplus (kg)")) +
-    geom_point(aes(x=`Year`, y=Median)) +
-    geom_errorbar(aes(x=`Year`, ymin=Q1, ymax = Q3, width=0.25)) +
-    geom_hline(yintercept = 0,colour="grey90") +
-    # facet_wrap(vars(facet_order), scales="free") +
-    ylab("Nitrogen surplus (kg)")
-  g_NUE <- ggplot(filter(Master_plots, `Farm type`==fbs_type_words[i], Quantity == "Nitrogen use efficiency (%)")) +
-    geom_point(aes(x=`Year`, y=Median)) +
-    geom_errorbar(aes(x=`Year`, ymin=Q1, ymax = Q3, width=0.25)) +
-    geom_hline(yintercept = 0,colour="grey90") +
-    # facet_wrap(vars(facet_order), scales="free") +
-    ylab("Nitrogen use efficiency (%)")
-  g_grid <- grid.arrange(g_co2perha, g_co2perkg, g_Nsurplus, g_NUE,
-               top=textGrob(fbs_type_words[i],gp=gpar(fontsize=20,font=2),x=0,hjust=0))
-  ggsave(file=paste0(Output_directory,"/Charts/Farm Business Survey ", max(sampyear_range)-1,"-",max(sampyear_range)-2000," - Carbon and Nitrogen charts - ",fbs_type_words[i],".png"), plot=g_grid, height=6,width=10)
+    # scale_x_discrete(guide = guide_axis(n.dodge=3))+
+    ylab(bquote(.(y_label)))
+  return(output_plot)
 }
+
+g_co2perha <- output_plot(9, "Absolute emissions", "t CO2-e per ha", "t CO"[2]~"-e / ha")
+plot(g_co2perha)
+g_co2perkg <- output_plot(i, "Emission intensity", "kg CO2-e per kg output", "kg CO"[2]~"-e / kg output")
+g_Nsurplus <- output_plot(i, "Nitrogen balance", "Nitrogen surplus (kg)", "kg N surplus / ha")
+g_NUE <- output_plot(i, "Nitrogen use efficiency", "Nitrogen use efficiency (%)", "NUE (%)")
+g_grid <- grid.arrange(g_co2perha, g_co2perkg, g_Nsurplus, g_NUE,
+                       top=textGrob(fbs_type_words[i],gp=gpar(fontsize=20,font=2),x=0,hjust=0))
+g_grid_no_typetitle <- grid.arrange(g_co2perha, g_co2perkg, g_Nsurplus, g_NUE)
+
