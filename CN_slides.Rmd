@@ -1,0 +1,37 @@
+---
+title: "Untitled"
+output: ioslides_presentation
+date: "2023-05-24"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Slide with Plot
+<div style="float: left; width: 75%;">
+```{r all_plots, echo=FALSE, message=FALSE,results = "asis"}
+for (i in 1) {
+
+  # Use the output_plot function to create four plots, and then arrange in a grid.
+  # Input arguments are type, title, quantity and y-axis label
+  g_co2perha <- output_plot(i, "Absolute emissions", "t CO2-e per ha", "t CO"[2]~"-e / ha", "#23A845")
+  g_co2perkg <- output_plot(i, "Emission intensity", "kg CO2-e per kg output", "kg CO"[2]~"-e / kg output", "#23A845")
+  g_Nsurplus <- output_plot(i, "Nitrogen balance", "Nitrogen surplus (kg)", "kg N surplus / ha", "#80BA27")
+  g_NUE <- output_plot(i, "Nitrogen use efficiency", "Nitrogen use efficiency (%)", "NUE (%)", "#80BA27")
+  if(i==9){
+    farmtype_title <- "All farm types"
+  } else{
+    farmtype_title <- fbs_type_words[i]
+  }
+  g_grid <- grid.arrange(g_co2perha, g_co2perkg, g_Nsurplus, g_NUE,
+                         top=textGrob(farmtype_title,gp=gpar(fontsize=20,font=2),x=0,hjust=0))
+}
+```
+</div>
+<div style="float: right; width: 15%;">
+  - Bullet 1
+  - Bullet 2
+  - Bullet 3
+
+</div>

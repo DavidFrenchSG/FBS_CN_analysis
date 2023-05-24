@@ -3,6 +3,10 @@ output:
   html_document:
     number_sections: false
 ---
+<!-- CSS to modify main text size -->
+<style type="text/css">
+  body{font-size: 12pt;}
+</style>
 
 ```{r title, include=FALSE}
 title <- title_var
@@ -13,31 +17,63 @@ title <- title_var
 <!-- Anything in the square brackets becomes the caption (here blank). -->
 <!-- The round brackets specify the image filepath. -->
 <!-- The curly brackets are for image formatting (here width and positioning) -->
+<!-- The SG logo should be 7.3cm wide if printed on A4 paper. That seems to be achieved by specifying its width as 8.7cm here. -->
 <!-- A space is also needed immediately after this line, and before the "---". -->
 
 ---
 title: | 
-  | ![](RESAS_logo_mg.jpg){width="7.8cm" style="float: left"}![](Scottish_Government_logo_RGB.jpg){width=7.3cm style="float: right; padding-top: 0.4cm"}
+  | ![](RESAS_logo_mg.jpg){width="7.8cm" style="float: left"}![](Scottish_Government_logo_RGB.jpg){width=8.7cm style="float: right; padding-top: 0.34cm"}
   | <!-- A space is needed here to prevent pipes appearing in the title. -->
-  | `r paste0(title_var)`
+  | `r paste0(title_line1)`
+  | `r paste0(title_line2)`
 ---
 
+$~$
   
 # Summary
-Summary text could go here?
+
+$~$
+
+Absolute gross GHG emissions per 
+hectare and per unit of product are 
+estimated using a carbon calculator.
+
+Nitrogen estimates are based on 
+standard estimates of nitrogen content 
+in all farm inputs and outputs where 
+possible.
+
+Nitrogen balance estimates the 
+amount of nitrogen that might be lost 
+to the environment.
+
+Estimates of nitrogen use efficiency, 
+the ratio of nitrogen outputs to inputs, 
+vary by farm output type. Arable farms 
+typically have higher nitrogen use 
+efficiency estimates than arable farms.
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(kableExtra)
 library(cowplot)
+library(pander)
 library(magick)
 options(scipen=999)
 options(knitr.kable.NA = '--')
 ```
 
-```{r all_plots, echo=FALSE, message=FALSE, fig.width=10}
-for (i in Output_types) {
+$~$
 
+# Farmtype summaries
+
+
+
+```{r all_plots, echo=FALSE, message=FALSE, fig.width=10,results = "asis"}
+for (i in Output_types) {
+cat('<br>')
+cat('<br>')
   # Use the output_plot function to create four plots, and then arrange in a grid.
   # Input arguments are type, title, quantity and y-axis label
   g_co2perha <- output_plot(i, "Absolute emissions", "t CO2-e per ha", "t CO"[2]~"-e / ha", "#23A845")
@@ -50,15 +86,38 @@ for (i in Output_types) {
     farmtype_title <- fbs_type_words[i]
   }
   g_grid <- grid.arrange(g_co2perha, g_co2perkg, g_Nsurplus, g_NUE,
-                         top=textGrob(farmtype_title,gp=gpar(fontsize=20,font=2),x=0,hjust=0))
+                         top=textGrob(farmtype_title,gp=gpar(fontsize=20,font=2),x=0,hjust=0),
+                         bottom=textGrob("Results are shown for the average (median) farm. Error bars demonstrate the spread of data from the lower to upper quartile.", gp=gpar(fontsize=11,font=1),x=0,hjust=-0.08))
+  
+  cat('<br>')
+  cat('<br>')
   
   ## Next two lines used to create charts with no farmtype-titles, for dropping into powerpoint.
   # g_grid_no_typetitle <- grid.arrange(g_co2perha, g_co2perkg, g_Nsurplus, g_NUE)
   # ggsave(file=paste0(Output_directory,"/Charts/Farm Business Survey ", max(sampyear_range)-1,"-",max(sampyear_range)-2000," - Carbon and Nitrogen charts - ",fbs_type_words[i],".png"), plot=g_grid_no_typetitle, height=6,width=10)
+  
+  ##Individual farmtype commentaries
+  #Cereal
+  if(i==1){cat('Cereals, such as barley and wheat are lorum ipsum...')}
+  #General cropping
+  if(i==2){cat('General cropping commentary goes here...')}
+  #Dairy
+  if(i==3){cat('')}
+  #Mixed
+  if(i==8){cat('')}
+  #All farms
+  if(i==9){cat('')}
+  #All LFA livestock farms
+  if(i==10){cat('')}
+  ##Add four blank lines to create a bit more whitespace between farmtypes
+  cat('<br>')
+  cat('<br>')
+  cat('<br>')
+  cat('<br>')
 }
 ```
 
 <!-- [1] All farm types includes lowland cattle and sheep farms. -->
 
-![](RESAS_logo_mg.jpg){width="7.8cm" style="float: left"}![](Scottish_Government_logo_RGB.jpg){width=7.3cm style="float: right; padding-top: 0.4cm"}
+![](RESAS_logo_mg.jpg){width="7.8cm" style="float: left"}![](Scottish_Government_logo_RGB.jpg){width=8.7cm style="float: right; padding-top: 0.34cm"}
 
