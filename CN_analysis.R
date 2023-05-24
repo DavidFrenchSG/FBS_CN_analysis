@@ -154,12 +154,14 @@ C_summarise <- function(df){
                   CO2e_per_ha_min = min(total_ha_co2),
                   CO2e_per_ha_med = weighted.median(total_ha_co2, fbswt),
                   CO2e_per_ha_max = max(total_ha_co2),
+                  
                   CO2e_per_kg_mean = weighted.mean(total_wf_co2, fbswt),
                   CO2e_per_kg_Q1 = weighted.quantile(total_wf_co2, fbswt, 0.25),
                   CO2e_per_kg_Q3 = weighted.quantile(total_wf_co2, fbswt, 0.75),
                   CO2e_per_kg_min = min(total_wf_co2),
                   CO2e_per_kg_med = weighted.median(total_wf_co2, fbswt),
                   CO2e_per_kg_max = max(total_wf_co2),
+                  
                   FBI_mean = weighted.mean(fa_fbi, fbswt),
                   farm_output_kg_mean = weighted.mean(farm_output_kg, fbswt),
                   farm_output_kg_med = weighted.median(farm_output_kg, fbswt),
@@ -259,41 +261,6 @@ write.csv(Nitrogen_summary,
           row.names = FALSE)  
 
 
-# for (i in 1:8){
-#   check <- AllYears_carbon %>% 
-#     filter(type==i, sampyear==2022) %>% 
-#     mutate(calc_area = wf_co2/total_ha_co2)
-#   
-#   Q1 <- weighted.quantile(check$total_ha_co2, check$fbswt,0.25)
-#   Q2 <- weighted.median(check$total_ha_co2, check$fbswt)
-#   Q3 <- weighted.quantile(check$total_ha_co2, check$fbswt,0.75)
-#   mean_ind <- weighted.mean(check$total_ha_co2, check$fbswt)
-#   mean_rat <- sum(check$wf_co2 * check$fbswt)/sum(check$fa_aua*check$fbswt)
-#   
-#   # check <- check %>%
-#   #   filter(total_wf_co2<1000)
-#   # # check<- check %>%
-#   #   filter(total_wf_co2<0.95*max(check$total_wf_co2),
-#   #          total_wf_co2 > 0)
-#   g=ggplot(check) +
-#     geom_histogram(aes(x=total_ha_co2, weight=fbswt))+
-#     geom_vline(xintercept = Q1,colour="red")+
-#     geom_vline(xintercept = Q2,colour="red")+
-#     geom_vline(xintercept = Q3,colour="red")+
-#     geom_vline(xintercept = mean_ind,colour="blue")+
-#     geom_vline(xintercept = mean_rat,colour="yellow")+
-#     annotate(x = Q1, y= 0, label = "Q1", geom = "label",colour="red")+
-#     annotate(x = Q2, y= 0, label = "Q2", geom = "label",colour="red")+
-#     annotate(x = Q3, y= 0, label = "Q3", geom = "label",colour="red")+
-#     annotate(x = mean_ind, y=0, label = "Mean_ind.", geom = "label",colour="blue")+
-#     annotate(x = mean_rat, y= 0, label = "Mean_ratio", geom = "label",colour="yellow")+
-#     labs(title=paste0(fbs_type_words[i]))
-#   print(g)
-# }
-# ggplot(filter(AllYears_carbon,type==1, abs(total_wf_co2)<10)) +
-#   geom_histogram(aes(total_wf_co2,weight=fbswt))
-# ggplot(filter(AllYears_carbon,type==5,total_wf_co2>-10,total_wf_co2<100)) +
-#   geom_histogram(aes(total_wf_co2,weight=fbswt))
   
 
 
@@ -340,11 +307,45 @@ write_xlsx(list(CO2e_per_ha = Table_1, CO2e_per_kg = Table_2, N_surplus = Table_
 
 
 
-#### The code below was sued for some rough QA, and will probably be deleted.
+#### The code below was used for QA, and will possibly be deleted.
 ##Leaving for now, commented out.
 
-
 # 
+# for (i in 1:8){
+#   check <- AllYears_carbon %>% 
+#     filter(type==i, sampyear==2022) %>% 
+#     mutate(calc_area = wf_co2/total_ha_co2)
+#   
+#   Q1 <- weighted.quantile(check$total_ha_co2, check$fbswt,0.25)
+#   Q2 <- weighted.median(check$total_ha_co2, check$fbswt)
+#   Q3 <- weighted.quantile(check$total_ha_co2, check$fbswt,0.75)
+#   mean_ind <- weighted.mean(check$total_ha_co2, check$fbswt)
+#   mean_rat <- sum(check$wf_co2 * check$fbswt)/sum(check$fa_aua*check$fbswt)
+#   
+#   # check <- check %>%
+#   #   filter(total_wf_co2<1000)
+#   # # check<- check %>%
+#   #   filter(total_wf_co2<0.95*max(check$total_wf_co2),
+#   #          total_wf_co2 > 0)
+#   g=ggplot(check) +
+#     geom_histogram(aes(x=total_ha_co2, weight=fbswt))+
+#     geom_vline(xintercept = Q1,colour="red")+
+#     geom_vline(xintercept = Q2,colour="red")+
+#     geom_vline(xintercept = Q3,colour="red")+
+#     geom_vline(xintercept = mean_ind,colour="blue")+
+#     geom_vline(xintercept = mean_rat,colour="yellow")+
+#     annotate(x = Q1, y= 0, label = "Q1", geom = "label",colour="red")+
+#     annotate(x = Q2, y= 0, label = "Q2", geom = "label",colour="red")+
+#     annotate(x = Q3, y= 0, label = "Q3", geom = "label",colour="red")+
+#     annotate(x = mean_ind, y=0, label = "Mean_ind.", geom = "label",colour="blue")+
+#     annotate(x = mean_rat, y= 0, label = "Mean_ratio", geom = "label",colour="yellow")+
+#     labs(title=paste0(fbs_type_words[i]))
+#   print(g)
+# }
+# ggplot(filter(AllYears_carbon,type==1, abs(total_wf_co2)<10)) +
+#   geom_histogram(aes(total_wf_co2,weight=fbswt))
+# ggplot(filter(AllYears_carbon,type==5,total_wf_co2>-10,total_wf_co2<100)) +
+#   geom_histogram(aes(total_wf_co2,weight=fbswt))
 # AllYears_carbon$livestock="No"
 # AllYears_carbon$livestock[AllYears_carbon$type %in% 3:7]="Yes"
 # 

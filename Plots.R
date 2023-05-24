@@ -1,7 +1,7 @@
 #Separate script for creating charts
 source('resas_theme.R')
 
-##Function for converting the tables created in CN_analysis.R into a format better for ggplot.
+##Function for converting the tables created in CN_analysis.R into a format better for feeding into ggplot.
 Create_plot_df <- function(Input_table, variable){
   Output_table <- Input_table %>% 
     gather(all_of(financial_years), key = "Year", value = "Value") %>% 

@@ -8,10 +8,6 @@ cropyear_range <- (2019:2021)
 #9: All farm types, 10: All LFA livestock types
 Output_types = c(9,1,2,3,10,8)
 
-
-
-
-
 #Use cropyears to determine sampyears
 sampyear_range <- cropyear_range + 1
 #Figure out the financial years associated with each sampyear. Eg., sampyear "2020" is financial year "2019/20"
