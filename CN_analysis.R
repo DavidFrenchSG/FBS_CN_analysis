@@ -6,6 +6,7 @@ library(writexl)
 library(data.table)
 library(gridExtra)
 library(grid)
+##Specify the locations of the data to be read in (SAS drive) and where outputs should go (currently the Z drive.)
 FBS_directory_path <- '//s0177a/sasdata1/ags/fas/'
 Output_directory <- '//s0177a/datashare/seerad/fas/raw_data/prod2022/Sefari_outputs'
 
@@ -144,187 +145,100 @@ AllYears_nue <- AllYears_nue %>%
   inner_join(AllYears_fa, by="fa_id") %>% 
   left_join(select(AllYears_carbon, fa_id, farm_output_kg), by="fa_id")
 
-#Create carbon output table 
+#Create carbon output table
+#Function to perform the summarising needed
+C_summarise <- function(df){
+  df <- summarise(df, CO2e_per_ha_mean = weighted.mean(total_ha_co2,fbswt),
+                  CO2e_per_ha_Q1 = weighted.quantile(total_ha_co2, fbswt, 0.25),
+                  CO2e_per_ha_Q3 = weighted.quantile(total_ha_co2, fbswt, 0.75),
+                  CO2e_per_ha_min = min(total_ha_co2),
+                  CO2e_per_ha_med = weighted.median(total_ha_co2, fbswt),
+                  CO2e_per_ha_max = max(total_ha_co2),
+                  CO2e_per_kg_mean = weighted.mean(total_wf_co2, fbswt),
+                  CO2e_per_kg_Q1 = weighted.quantile(total_wf_co2, fbswt, 0.25),
+                  CO2e_per_kg_Q3 = weighted.quantile(total_wf_co2, fbswt, 0.75),
+                  CO2e_per_kg_min = min(total_wf_co2),
+                  CO2e_per_kg_med = weighted.median(total_wf_co2, fbswt),
+                  CO2e_per_kg_max = max(total_wf_co2),
+                  FBI_mean = weighted.mean(fa_fbi, fbswt),
+                  farm_output_kg_mean = weighted.mean(farm_output_kg, fbswt),
+                  farm_output_kg_med = weighted.median(farm_output_kg, fbswt),
+                  farm_output_kg_Q1 = weighted.quantile(farm_output_kg, fbswt, 0.25),
+                  farm_output_kg_Q3 = weighted.quantile(farm_output_kg, fbswt, 0.75),
+                  fbswt_sum = sum(fbswt),
+                  simple_count = n())
+  return(df)
+}
+##Apply the summarising function to individual types
 Carbon_summary <- AllYears_carbon %>% 
-  group_by(sampyear,type) %>% 
-  summarise(CO2e_per_ha_mean = weighted.mean(total_ha_co2,fbswt),
-            CO2e_per_ha_Q1 = weighted.quantile(total_ha_co2, fbswt, 0.25),
-            CO2e_per_ha_Q3 = weighted.quantile(total_ha_co2, fbswt, 0.75),
-            CO2e_per_ha_min = min(total_ha_co2),
-            CO2e_per_ha_med = weighted.median(total_ha_co2, fbswt),
-            CO2e_per_ha_max = max(total_ha_co2),
-            CO2e_per_kg_mean = weighted.mean(total_wf_co2, fbswt),
-            CO2e_per_kg_Q1 = weighted.quantile(total_wf_co2, fbswt, 0.25),
-            CO2e_per_kg_Q3 = weighted.quantile(total_wf_co2, fbswt, 0.75),
-            CO2e_per_kg_min = min(total_wf_co2),
-            CO2e_per_kg_med = weighted.median(total_wf_co2, fbswt),
-            CO2e_per_kg_max = max(total_wf_co2),
-            FBI_mean = weighted.mean(fa_fbi, fbswt),
-            farm_output_kg_mean = weighted.mean(farm_output_kg, fbswt),
-            farm_output_kg_med = weighted.median(farm_output_kg, fbswt),
-            farm_output_kg_Q1 = weighted.quantile(farm_output_kg, fbswt, 0.25),
-            farm_output_kg_Q3 = weighted.quantile(farm_output_kg, fbswt, 0.75),
-            fbswt_sum = sum(fbswt),
-            simple_count = n())
+  group_by(sampyear, type) %>% 
+  C_summarise()
+##Apply separately to "All farm types" (type=9)
 Carbon_summary_all <- AllYears_carbon %>% 
   group_by(sampyear) %>%
-  summarise(CO2e_per_ha_mean = weighted.mean(total_ha_co2,fbswt),
-            CO2e_per_ha_Q1 = weighted.quantile(total_ha_co2, fbswt, 0.25),
-            CO2e_per_ha_Q3 = weighted.quantile(total_ha_co2, fbswt, 0.75),
-            CO2e_per_ha_min = min(total_ha_co2),
-            CO2e_per_ha_med = weighted.median(total_ha_co2, fbswt),
-            CO2e_per_ha_max = max(total_ha_co2),
-            CO2e_per_kg_mean = weighted.mean(total_wf_co2, fbswt),
-            CO2e_per_kg_Q1 = weighted.quantile(total_wf_co2, fbswt, 0.25),
-            CO2e_per_kg_Q3 = weighted.quantile(total_wf_co2, fbswt, 0.75),
-            CO2e_per_kg_min = min(total_wf_co2),
-            CO2e_per_kg_med = weighted.median(total_wf_co2, fbswt),
-            CO2e_per_kg_max = max(total_wf_co2),
-            FBI_mean = weighted.mean(fa_fbi, fbswt),
-            farm_output_kg_mean = weighted.mean(farm_output_kg, fbswt),
-            farm_output_kg_med = weighted.median(farm_output_kg, fbswt),
-            farm_output_kg_Q1 = weighted.quantile(farm_output_kg, fbswt, 0.25),
-            farm_output_kg_Q3 = weighted.quantile(farm_output_kg, fbswt, 0.75),
-            fbswt_sum = sum(fbswt),
-            simple_count = n()) %>% 
+  C_summarise() %>% 
   mutate(type=9)
+##And once more for "All LFA farms" (type=10)
 Carbon_summary_LFA <- AllYears_carbon %>%
   filter(type %in% 4:6) %>% 
   group_by(sampyear) %>%
-  summarise(CO2e_per_ha_mean = weighted.mean(total_ha_co2,fbswt),
-            CO2e_per_ha_Q1 = weighted.quantile(total_ha_co2, fbswt, 0.25),
-            CO2e_per_ha_Q3 = weighted.quantile(total_ha_co2, fbswt, 0.75),
-            CO2e_per_ha_min = min(total_ha_co2),
-            CO2e_per_ha_med = weighted.median(total_ha_co2, fbswt),
-            CO2e_per_ha_max = max(total_ha_co2),
-            CO2e_per_kg_mean = weighted.mean(total_wf_co2, fbswt),
-            CO2e_per_kg_Q1 = weighted.quantile(total_wf_co2, fbswt, 0.25),
-            CO2e_per_kg_Q3 = weighted.quantile(total_wf_co2, fbswt, 0.75),
-            CO2e_per_kg_min = min(total_wf_co2),
-            CO2e_per_kg_med = weighted.median(total_wf_co2, fbswt),
-            CO2e_per_kg_max = max(total_wf_co2),
-            FBI_mean = weighted.mean(fa_fbi, fbswt),
-            farm_output_kg_mean = weighted.mean(farm_output_kg, fbswt),
-            farm_output_kg_med = weighted.median(farm_output_kg, fbswt),
-            farm_output_kg_Q1 = weighted.quantile(farm_output_kg, fbswt, 0.25),
-            farm_output_kg_Q3 = weighted.quantile(farm_output_kg, fbswt, 0.75),
-            fbswt_sum = sum(fbswt),
-            simple_count = n()) %>% 
+  C_summarise() %>% 
   mutate(type=10)
+#Append the "All farm types" and "All LFA farms" mini-tables to the main table.
+#Also convert kg to tonnes for per hectare calculations
 Carbon_summary <- Carbon_summary %>% 
   bind_rows(Carbon_summary_all, Carbon_summary_LFA) %>% 
-  #Convert kg to tonnes for per hectare calculations
-  mutate_at(vars(starts_with("CO2e_per_ha")), function(x) x*0.001) 
+  mutate_at(vars(starts_with("CO2e_per_ha")), function(x) x*0.001)
+##Order by sampyear
 Carbon_summary <- Carbon_summary[order(Carbon_summary$sampyear),]
 
-
+##Repeat summarisation steps for Nitrogen
+N_summary <- function(df){
+  df <- summarise(df, N_surplus_mean = weighted.mean(farm_n_surplus, fbswt),
+                  N_surplus_Q1 = weighted.quantile(farm_n_surplus, fbswt, 0.25),
+                  N_surplus_Q3 = weighted.quantile(farm_n_surplus, fbswt, 0.75),
+                  N_surplus_min = min(farm_n_surplus),
+                  N_surplus_med = weighted.median(farm_n_surplus, fbswt),
+                  N_surplus_max = max(farm_n_surplus, fbswt),
+                  
+                  N_input_mean = weighted.mean(ninput_total, fbswt),
+                  N_input_Q1 = weighted.quantile(ninput_total, fbswt, 0.25),
+                  N_input_Q3 = weighted.quantile(ninput_total, fbswt, 0.75),
+                  N_input_min = min(ninput_total),
+                  N_input_med = weighted.median(ninput_total, fbswt),
+                  N_input_max = max(ninput_total, fbswt),
+                  
+                  N_output_mean = weighted.mean(noutput_total, fbswt),
+                  N_output_Q1 = weighted.quantile(noutput_total, fbswt, 0.25),
+                  N_output_Q3 = weighted.quantile(noutput_total, fbswt, 0.75),
+                  N_output_min = min(noutput_total),
+                  N_output_med = weighted.median(noutput_total, fbswt),
+                  N_output_max = max(noutput_total, fbswt),
+                  
+                  nue_mean = weighted.mean(nue, fbswt),
+                  nue_Q1 = weighted.quantile(nue, fbswt, 0.25),
+                  nue_Q3 = weighted.quantile(nue, fbswt, 0.75),
+                  nue_min = min(nue),
+                  nue_med = weighted.median(nue, fbswt),
+                  nue_max = max(nue),
+                  farm_output_kg_mean = weighted.mean(farm_output_kg, fbswt),
+                  farm_output_kg_med = weighted.median(farm_output_kg, fbswt),
+                  farm_output_kg_Q1 = weighted.quantile(farm_output_kg, fbswt, 0.25),
+                  farm_output_kg_Q3 = weighted.quantile(farm_output_kg, fbswt, 0.75),
+                  fbswt_sum = sum(fbswt),
+                  simple_count = n())
+}
 Nitrogen_summary <- AllYears_nue %>% 
   group_by(sampyear, type) %>%
-  summarise(N_surplus_mean = weighted.mean(farm_n_surplus, fbswt),
-            N_surplus_Q1 = weighted.quantile(farm_n_surplus, fbswt, 0.25),
-            N_surplus_Q3 = weighted.quantile(farm_n_surplus, fbswt, 0.75),
-            N_surplus_min = min(farm_n_surplus),
-            N_surplus_med = weighted.median(farm_n_surplus, fbswt),
-            N_surplus_max = max(farm_n_surplus, fbswt),
-            
-            N_input_mean = weighted.mean(ninput_total, fbswt),
-            N_input_Q1 = weighted.quantile(ninput_total, fbswt, 0.25),
-            N_input_Q3 = weighted.quantile(ninput_total, fbswt, 0.75),
-            N_input_min = min(ninput_total),
-            N_input_med = weighted.median(ninput_total, fbswt),
-            N_input_max = max(ninput_total, fbswt),
-            
-            N_output_mean = weighted.mean(noutput_total, fbswt),
-            N_output_Q1 = weighted.quantile(noutput_total, fbswt, 0.25),
-            N_output_Q3 = weighted.quantile(noutput_total, fbswt, 0.75),
-            N_output_min = min(noutput_total),
-            N_output_med = weighted.median(noutput_total, fbswt),
-            N_output_max = max(noutput_total, fbswt),
-            
-            nue_mean = weighted.mean(nue, fbswt),
-            nue_Q1 = weighted.quantile(nue, fbswt, 0.25),
-            nue_Q3 = weighted.quantile(nue, fbswt, 0.75),
-            nue_min = min(nue),
-            nue_med = weighted.median(nue, fbswt),
-            nue_max = max(nue),
-            farm_output_kg_mean = weighted.mean(farm_output_kg, fbswt),
-            farm_output_kg_med = weighted.median(farm_output_kg, fbswt),
-            farm_output_kg_Q1 = weighted.quantile(farm_output_kg, fbswt, 0.25),
-            farm_output_kg_Q3 = weighted.quantile(farm_output_kg, fbswt, 0.75),
-            fbswt_sum = sum(fbswt),
-            simple_count = n())
+  N_summary()
 Nitrogen_summary_all <- AllYears_nue %>% 
   group_by(sampyear) %>%
-  summarise(N_surplus_mean = weighted.mean(farm_n_surplus, fbswt),
-            N_surplus_Q1 = weighted.quantile(farm_n_surplus, fbswt, 0.25),
-            N_surplus_Q3 = weighted.quantile(farm_n_surplus, fbswt, 0.75),
-            N_surplus_min = min(farm_n_surplus),
-            N_surplus_med = weighted.median(farm_n_surplus, fbswt),
-            N_surplus_max = max(farm_n_surplus, fbswt),
-            
-            N_input_mean = weighted.mean(ninput_total, fbswt),
-            N_input_Q1 = weighted.quantile(ninput_total, fbswt, 0.25),
-            N_input_Q3 = weighted.quantile(ninput_total, fbswt, 0.75),
-            N_input_min = min(ninput_total),
-            N_input_med = weighted.median(ninput_total, fbswt),
-            N_input_max = max(ninput_total, fbswt),
-            
-            N_output_mean = weighted.mean(noutput_total, fbswt),
-            N_output_Q1 = weighted.quantile(noutput_total, fbswt, 0.25),
-            N_output_Q3 = weighted.quantile(noutput_total, fbswt, 0.75),
-            N_output_min = min(noutput_total),
-            N_output_med = weighted.median(noutput_total, fbswt),
-            N_output_max = max(noutput_total, fbswt),
-            
-            nue_mean = weighted.mean(nue, fbswt),
-            nue_Q1 = weighted.quantile(nue, fbswt, 0.25),
-            nue_Q3 = weighted.quantile(nue, fbswt, 0.75),
-            nue_min = min(nue),
-            nue_med = weighted.median(nue, fbswt),
-            nue_max = max(nue),
-            farm_output_kg_mean = weighted.mean(farm_output_kg, fbswt),
-            farm_output_kg_med = weighted.median(farm_output_kg, fbswt),
-            farm_output_kg_Q1 = weighted.quantile(farm_output_kg, fbswt, 0.25),
-            farm_output_kg_Q3 = weighted.quantile(farm_output_kg, fbswt, 0.75),
-            fbswt_sum = sum(fbswt),
-            simple_count = n()) %>% 
+  N_summary() %>% 
   mutate(type=9)
 Nitrogen_summary_LFA <- AllYears_nue %>%
   filter(type %in% 4:6) %>% 
   group_by(sampyear) %>%
-  summarise(N_surplus_mean = weighted.mean(farm_n_surplus, fbswt),
-            N_surplus_Q1 = weighted.quantile(farm_n_surplus, fbswt, 0.25),
-            N_surplus_Q3 = weighted.quantile(farm_n_surplus, fbswt, 0.75),
-            N_surplus_min = min(farm_n_surplus),
-            N_surplus_med = weighted.median(farm_n_surplus, fbswt),
-            N_surplus_max = max(farm_n_surplus, fbswt),
-            
-            N_input_mean = weighted.mean(ninput_total, fbswt),
-            N_input_Q1 = weighted.quantile(ninput_total, fbswt, 0.25),
-            N_input_Q3 = weighted.quantile(ninput_total, fbswt, 0.75),
-            N_input_min = min(ninput_total),
-            N_input_med = weighted.median(ninput_total, fbswt),
-            N_input_max = max(ninput_total, fbswt),
-            
-            N_output_mean = weighted.mean(noutput_total, fbswt),
-            N_output_Q1 = weighted.quantile(noutput_total, fbswt, 0.25),
-            N_output_Q3 = weighted.quantile(noutput_total, fbswt, 0.75),
-            N_output_min = min(noutput_total),
-            N_output_med = weighted.median(noutput_total, fbswt),
-            N_output_max = max(noutput_total, fbswt),
-            
-            nue_mean = weighted.mean(nue, fbswt),
-            nue_Q1 = weighted.quantile(nue, fbswt, 0.25),
-            nue_Q3 = weighted.quantile(nue, fbswt, 0.75),
-            nue_min = min(nue),
-            nue_med = weighted.median(nue, fbswt),
-            nue_max = max(nue),
-            farm_output_kg_mean = weighted.mean(farm_output_kg, fbswt),
-            farm_output_kg_med = weighted.median(farm_output_kg, fbswt),
-            farm_output_kg_Q1 = weighted.quantile(farm_output_kg, fbswt, 0.25),
-            farm_output_kg_Q3 = weighted.quantile(farm_output_kg, fbswt, 0.75),
-            fbswt_sum = sum(fbswt),
-            simple_count = n()) %>% 
+  N_summary() %>% 
   mutate(type=10)
 Nitrogen_summary <- Nitrogen_summary %>% 
   bind_rows(Nitrogen_summary_all, Nitrogen_summary_LFA)
@@ -381,6 +295,12 @@ write.csv(Nitrogen_summary,
 # ggplot(filter(AllYears_carbon,type==5,total_wf_co2>-10,total_wf_co2<100)) +
 #   geom_histogram(aes(total_wf_co2,weight=fbswt))
   
+
+
+
+
+
+
 #Column names for the output tables - Type, measure and then one for each financial year.
 Output_colnames = c("Farm type", "Measure", c(financial_years))
 
