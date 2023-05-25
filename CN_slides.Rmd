@@ -8,11 +8,12 @@ date: "2023-05-24"
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-## Slide with Plot
-<div style="float: left; width: 75%;">
-```{r all_plots, echo=FALSE, message=FALSE,results = "asis"}
-for (i in 1) {
 
+
+```{r all_plots, echo=FALSE, message=FALSE,results = "asis"}
+for (i in 1:3) {
+  cat("## Slide with Plot  \n")
+  cat("<div style=\"float: left; width: 75%;\">")
   # Use the output_plot function to create four plots, and then arrange in a grid.
   # Input arguments are type, title, quantity and y-axis label
   g_co2perha <- output_plot(i, "Absolute emissions", "t CO2-e per ha", "t CO"[2]~"-e / ha", "#23A845")
@@ -26,12 +27,22 @@ for (i in 1) {
   }
   g_grid <- grid.arrange(g_co2perha, g_co2perkg, g_Nsurplus, g_NUE,
                          top=textGrob(farmtype_title,gp=gpar(fontsize=20,font=2),x=0,hjust=0))
+  cat("</div>")
+  cat("<div style=\"float: right; width: 25%;\">")
+  # ```{r commentaries, results="asis"}
+  ##Individual farmtype commentaries
+  #Cereal
+  if(i==1){cat('Cereals, such as barley and wheat are lorum ipsum...')}
+  #General cropping
+  if(i==2){cat('General cropping commentary goes here...')}
+  #Dairy
+  if(i==3){cat('')}
+  #Mixed
+  if(i==8){cat('')}
+  #All farms
+  if(i==9){cat('')}
+  #All LFA livestock farms
+  if(i==10){cat('')}
+  cat('</div>')
 }
 ```
-</div>
-<div style="float: right; width: 15%;">
-  - Bullet 1
-  - Bullet 2
-  - Bullet 3
-
-</div>
