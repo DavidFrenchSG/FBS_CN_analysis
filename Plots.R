@@ -35,7 +35,7 @@ output_plot <- function(i, title_label, quantity_label, y_label, colour_code="#2
     geom_errorbar(aes(x=`Year`, ymin=Q1, ymax = Q3, width=0.25)) +
     geom_hline(yintercept = 0,colour="grey90")+
     xlab(element_blank())+
-    labs(title = title_label)+
+    labs(title = paste0(title_label))+
     # facet_wrap(vars(facet_order), scales="free") +
     # scale_x_discrete(guide = guide_axis(n.dodge=3))+
     ylab(bquote(.(y_label)))

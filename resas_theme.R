@@ -32,7 +32,7 @@ theme_resas <- theme_bw(base_size = 12) +
     panel.border = element_blank(),
     panel.grid.major.y = element_line(colour = "grey90"),
     axis.line = element_blank(),
-    plot.title = element_text(family = "sans", size = 16, face = "bold", colour = "black"),
+    plot.title = element_text(family = "sans", size = 16, face = "plain", colour = "black"),
     plot.subtitle = element_text(family = "sans", size = 14, colour = "grey10"),
     plot.caption = element_text(family = "sans", size = 12, colour = "grey10"),
     strip.background = element_blank(),

@@ -9,6 +9,7 @@ cropyear_range <- (2019:2021)
 Output_types = c(9,1,2,3,10,8)
 # Output_types=c(1)
 
+
 #Use cropyears to determine sampyears
 sampyear_range <- cropyear_range + 1
 #Figure out the financial years associated with each sampyear. Eg., sampyear "2020" is financial year "2019/20"
@@ -17,9 +18,9 @@ financial_years_end <- sampyear_range - 2000
 financial_years <- paste0(financial_years_start,"-",financial_years_end)
 
 #Specify the document title
-title_line1 <- paste0("Farm Business Survey ",max(financial_years),":")
+title_line1 <- paste0("Farm Business Survey ", max(financial_years),":")
 title_line2 <- "Farm level emissions and nitrogen usage"
-title_single_line <- paste0(title_line1," ", title_line2)
+title_single_line <- paste0(title_line1,title_line2)
 
 
 
@@ -27,6 +28,6 @@ title_single_line <- paste0(title_line1," ", title_line2)
 source('CN_analysis.R')
 source('Plots.R')
 rmarkdown::render('CN_analysis_md.Rmd')
-rmarkdown::render('CN_slides.Rmd')
-rmarkdown::render('CN_ppt.Rmd')
+# rmarkdown::render('CN_slides.Rmd')
+# rmarkdown::render('CN_ppt.Rmd')
 
