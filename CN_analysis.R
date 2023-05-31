@@ -13,7 +13,8 @@ Output_directory <- '//s0177a/datashare/seerad/fas/raw_data/prod2022/Sefari_outp
 #Variables for farmtype names and numbering
 fbs_type_numbers <- c(1:10)
 ## The "[1]" after "All farm types" is a deliberate footnote.
-fbs_type_words <- c("Cereal","General Cropping","Dairy","LFA Sheep","LFA Cattle","LFA Cattle and Sheep","Lowland Livestock","Mixed","All farm types [1]", "Less favoured area (LFA) livestock")
+# fbs_type_words <- c("Cereal","General Cropping","Dairy","LFA Sheep","LFA Cattle","LFA Cattle and Sheep","Lowland Livestock","Mixed","All farm types [1]", "Less favoured area (LFA) livestock")
+fbs_type_words <- c("Cereal","General Cropping","Dairy","LFA Sheep","LFA Cattle","LFA Cattle and Sheep","Lowland Livestock","Mixed","All farm types", "Less favoured area (LFA) livestock")
 fbs_type_tab <- data.frame(fbs_type_numbers, fbs_type_words)
 apply_type_formats <- function(table_name) {
   setkey(setDT(table_name),type)
