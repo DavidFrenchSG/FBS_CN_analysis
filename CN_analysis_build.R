@@ -2,12 +2,12 @@
 
 
 #Choose the range of *crop* years of interest here
-cropyear_range <- (2019:2021)
+cropyear_range <- c(2019:2021)
 #Specify the farmtypes to be included, and their order. 1: Cereal, 2: General cropping, 3: Dairy,
 #4: LFA Sheep, 5: LFA Cattle, 6: LFA Cattle & Sheep, 7: Lowland livestock, 8: Mixed
 #9: All farm types, 10: All LFA livestock types
 Output_types = c(9,1,2,3,10,8)
-# Output_types=c(1)
+Output_types=c(9)
 
 
 #Use cropyears to determine sampyears
