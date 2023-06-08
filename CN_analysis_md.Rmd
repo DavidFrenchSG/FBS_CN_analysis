@@ -10,8 +10,7 @@ title <- title_var
 
 ```{css, echo=FALSE}
 p {
-
-  font-size: 18px;
+  font-size: 19px;
 }
 ```
 
@@ -45,8 +44,6 @@ Nitrogen balance estimates the amount of nitrogen that might be lost to the envi
 Estimates of nitrogen use efficiency, the ratio of nitrogen outputs to inputs, vary by farm output type. Arable farms typically have higher nitrogen use efficiency estimates than livestock farms.
 
 The full publication [link] contains additional commentary. All data tables are available to download under supporting documents [link].
-
-A pilot staff suggestion scheme opened today, inviting colleagues to share ideas to help shape our future workplace culture.  
 
 <br>
 
