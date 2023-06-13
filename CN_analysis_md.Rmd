@@ -5,7 +5,7 @@ output:
 ---
 
 ```{r title, include=FALSE}
-title <- title_var
+# title <- title_var
 ```
 
 ```{css, echo=FALSE}
@@ -53,6 +53,7 @@ library(kableExtra)
 library(cowplot)
 library(pander)
 library(magick)
+library(quanteda)
 options(scipen=999)
 options(knitr.kable.NA = '--')
 ```
@@ -80,9 +81,9 @@ for (i in Output_types) {
   g_Nsurplus <- output_plot(i, "Nitrogen balance", "Nitrogen surplus (kg)", "kg N surplus / ha", "#80BA27")
   g_NUE <- output_plot(i, "Nitrogen use efficiency", "Nitrogen use efficiency (%)", "NUE (%)", "#80BA27")
   if(i==9){
-    farmtype_title <- "All farm types"
+    farmtype_title <- "Average farm"
   } else{
-    farmtype_title <- fbs_type_words[i]
+      farmtype_title <- paste0("Average ",char_tolower(fbs_type_words[i], keep_acronyms = T)," farm")
   }
   farmtype_title <- paste0(farmtype_title,"  \n")
   g_grid <- grid.arrange(g_co2perha, g_co2perkg, g_Nsurplus, g_NUE,
