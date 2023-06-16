@@ -1,5 +1,21 @@
 #Separate script for creating charts
 source('resas_theme.R')
+round2 <- function(x, n) {
+  
+  posneg = sign(x)
+  
+  z = abs(x)*10^n
+  
+  z = z + 0.5 + sqrt(.Machine$double.eps)
+  
+  z = trunc(z)
+  
+  z = z/10^n
+  
+  z*posneg
+  
+}
+
 
 ##Function for converting the tables created in CN_analysis.R into a format better for feeding into ggplot.
 Create_plot_df <- function(Input_table, variable){
@@ -25,10 +41,10 @@ Master_plots$facet_order = factor(Master_plots$Quantity,
                                   levels = c("t CO2-e per ha", "kg CO2-e per kg output",
                                              "Nitrogen surplus (kg)", "Nitrogen use efficiency (%)"))
 
-# Function for creating the four plots for each type
+# Function for creating the four plots for each type - for use in the visual summary
 # The input arguments are the type, quantity to be plotted, label for the y-axis and the rgb colour code.
 # A default colour code (#23A845, one of the standard Resas greens) is included.
-output_plot <- function(i, title_label, quantity_label, y_label, colour_code="#23A845"){
+output_plot <- function(i, title_label, quantity_label, y_label, colour_code="#00833E"){
   output_plot <- ggplot(filter(Master_plots, `Farm type`==fbs_type_words[i], Quantity == quantity_label)) +
     geom_col(aes(x=`Year`, y=Median), fill=colour_code) +
     geom_point(aes(x=`Year`, y=Median)) +
@@ -42,12 +58,36 @@ output_plot <- function(i, title_label, quantity_label, y_label, colour_code="#2
   return(output_plot)
 }
 
-# g_co2perha <- output_plot(9, "Absolute emissions", "t CO2-e per ha", "t CO"[2]~"-e / ha")
-# plot(g_co2perha)
-# g_co2perkg <- output_plot(i, "Emission intensity", "kg CO2-e per kg output", "kg CO"[2]~"-e / kg output")
-# g_Nsurplus <- output_plot(i, "Nitrogen balance", "Nitrogen surplus (kg)", "kg N surplus / ha")
-# g_NUE <- output_plot(i, "Nitrogen use efficiency", "Nitrogen use efficiency (%)", "NUE (%)")
-# g_grid <- grid.arrange(g_co2perha, g_co2perkg, g_Nsurplus, g_NUE,
-#                        top=textGrob(fbs_type_words[i],gp=gpar(fontsize=20,font=2),x=0,hjust=0))
-# g_grid_no_typetitle <- grid.arrange(g_co2perha, g_co2perkg, g_Nsurplus, g_NUE)
+# A slightly modified function for creating the plots for use in the html publication.
+output_plot_pub <- function(i, title_label, quantity_label, y_label, colour_code="#00833E", NUE_flag=F){
+  output_plot_pub <- ggplot(filter(Master_plots, `Farm type`==fbs_type_words[i], Quantity == quantity_label)) +
+    geom_col(aes(x=`Year`, y=Median), fill=colour_code) +
+    geom_point(aes(x=`Year`, y=Median)) +
+    geom_errorbar(aes(x=`Year`, ymin=Q1, ymax = Q3, width=0.25)) +
+    xlab(element_blank())+
+    # labs(title = paste0(title_label))+
+    {if(NUE_flag==T)geom_text(aes(x=`Year`, y=Median, vjust=-0.5, hjust=-0.08, label=paste0(format(round2(Median,0), nsmall=0),"%")), colour="Black", size=12, fontface="bold")}+
+    {if(NUE_flag==F)geom_text(aes(x=`Year`, y=Median, vjust=-0.5, hjust=-0.08, label=format(round2(Median,1), nsmall=1)), colour="Black", size=12, fontface="bold")}+
+    theme(axis.text = element_text(size = 20),
+          axis.title = element_text(size = 24))+
+    ylab(bquote(.(y_label)))
+  return(output_plot_pub)
+}
+
+#Use the modified function to create plots for publication
+g_co2perha_pub <- output_plot_pub(9, "Absolute emissions", "t CO2-e per ha", "t CO"[2]~"-e / ha")
+plot(g_co2perha_pub)
+g_co2perkg_pub <- output_plot_pub(9, "Emission intensity", "kg CO2-e per kg output", "kg CO"[2]~"-e / kg output")
+plot(g_co2perkg_pub)
+g_Nsurplus_pub <- output_plot_pub(9, "Nitrogen balance", "Nitrogen surplus (kg)", "kg N surplus / ha", "#6EA022")
+plot(g_Nsurplus_pub)
+g_NUE_pub <- output_plot_pub(9, "Nitrogen use efficiency", "Nitrogen use efficiency (%)", "NUE (%)", "#6EA022", NUE_flag = T)
+plot(g_NUE_pub)
+#Save as SVG files
+SVGHeight <- 5
+SVGWidth <- 9
+ggsave(file="co2perha_pub.svg", plot=g_co2perha_pub, width=SVGWidth, height=SVGHeight)
+ggsave(file="co2perkg_pub.svg", plot=g_co2perkg_pub, width=SVGWidth, height=SVGHeight)
+ggsave(file="Nsurplus_pub.svg", plot=g_Nsurplus_pub, width=SVGWidth, height=SVGHeight)
+ggsave(file="NUE_pub.svg", plot=g_NUE_pub, width=SVGWidth, height=SVGHeight)
 

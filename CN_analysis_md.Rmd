@@ -24,16 +24,19 @@ p {
 
 ---
 title: | 
-  | ![](RESAS_logo_mg.jpg){width="7.8cm" style="float: left"}![](Scottish_Government_logo_RGB.jpg){width=8.7cm style="float: right; padding-top: 0.34cm"}
+  | !["Rural & Environmental Science and Analytical Services logo"](RESAS_logo_mg.jpg){width="7.8cm" style="float: left"}!["Scottish Government/Riaghaltas na h-Alba logo"](Scottish_Government_logo_RGB.jpg){width=8.7cm style="float: right; padding-top: 0.34cm"}
   | <!-- A space is needed here to prevent pipes appearing in the title. -->
   | <!-- Extra white space to separate logos and title -->
   | `r paste0(title_line1)`
   | `r paste0(title_line2)`
 ---
-
 <br>
 
 # Summary
+
+These new and experimental data provide greenhouse gas emission estimates and nitrogen use estimates for the average Scottish farm over the last three years. These data complement national-level estimates and enterprise-specific estimates by providing a view and time series of emissions and nitrogen use on real farms. 
+
+This analysis is based on a survey of around 400 commercial farms. Data do not cover the full agricultural industry and are not comparable with national estimates.
 
 Absolute gross greenhouse gas emissions per hectare and per unit of product are estimated using a carbon calculator.
 
@@ -76,10 +79,10 @@ for (i in Output_types) {
   }  
   # Use the output_plot function to create four plots, and then arrange in a grid.
   # Input arguments are type, title, quantity and y-axis label
-  g_co2perha <- output_plot(i, "Absolute emissions", "t CO2-e per ha", "t CO"[2]~"-e / ha", "#23A845")
-  g_co2perkg <- output_plot(i, "Emission intensity", "kg CO2-e per kg output", "kg CO"[2]~"-e / kg output", "#23A845")
-  g_Nsurplus <- output_plot(i, "Nitrogen balance", "Nitrogen surplus (kg)", "kg N surplus / ha", "#80BA27")
-  g_NUE <- output_plot(i, "Nitrogen use efficiency", "Nitrogen use efficiency (%)", "NUE (%)", "#80BA27")
+  g_co2perha <- output_plot(i, "Absolute emissions", "t CO2-e per ha", "t CO"[2]~"-e / ha", "#00833E")
+  g_co2perkg <- output_plot(i, "Emission intensity", "kg CO2-e per kg output", "kg CO"[2]~"-e / kg output", "#00833E")
+  g_Nsurplus <- output_plot(i, "Nitrogen balance", "Nitrogen surplus (kg)", "kg N surplus / ha", "#6EA022")
+  g_NUE <- output_plot(i, "Nitrogen use efficiency", "Nitrogen use efficiency (%)", "NUE (%)", "#6EA022")
   if(i==9){
     farmtype_title <- "Average farm"
   } else{
