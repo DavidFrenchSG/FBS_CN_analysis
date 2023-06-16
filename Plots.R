@@ -1,19 +1,13 @@
 #Separate script for creating charts
 source('resas_theme.R')
+# Defining a function which rounds in an expected way (rather than, eg,  rounding 53.2500 to 53.2).
 round2 <- function(x, n) {
-  
   posneg = sign(x)
-  
   z = abs(x)*10^n
-  
   z = z + 0.5 + sqrt(.Machine$double.eps)
-  
   z = trunc(z)
-  
   z = z/10^n
-  
   z*posneg
-  
 }
 
 
