@@ -14,7 +14,7 @@ Output_directory <- '//s0177a/datashare/seerad/fas/raw_data/prod2022/Sefari_outp
 fbs_type_numbers <- c(1:10)
 ## The "[1]" after "All farm types" is a deliberate footnote.
 # fbs_type_words <- c("Cereal","General Cropping","Dairy","LFA Sheep","LFA Cattle","LFA Cattle and Sheep","Lowland Livestock","Mixed","All farm types [1]", "Less favoured area (LFA) livestock")
-fbs_type_words <- c("Cereal","General Cropping","Dairy","LFA Sheep","LFA Cattle","LFA Cattle and Sheep","Lowland Livestock","Mixed","All farm types", "Less favoured area (LFA) livestock")
+fbs_type_words <- c("Cereal","General Cropping","Dairy","LFA Sheep","LFA Cattle","LFA Cattle and Sheep","Lowland Livestock","Mixed","All Farm Types", "Less favoured area (LFA) Livestock")
 fbs_type_tab <- data.frame(fbs_type_numbers, fbs_type_words)
 apply_type_formats <- function(table_name) {
   setkey(setDT(table_name),type)
@@ -262,9 +262,51 @@ write.csv(Nitrogen_summary,
           row.names = FALSE)  
 
 
-  
+#Create a combined summary table and csv for the open data platform
 
+Combined_summary <- Carbon_summary %>% 
+  left_join(Nitrogen_summary, by=c("sampyear", "farmtype", "type")) %>% 
+  filter(type %in% Output_types) %>% 
+  mutate(DateCode=paste0(sampyear-1,"/",sampyear)) %>% 
+  select(Farmtype=farmtype,
+         DateCode,
+         "Farm emissions per hectare - median" = CO2e_per_ha_med,
+         "Farm emissions per hectare - lower quartile" = CO2e_per_ha_Q1,
+         "Farm emissions per hectare - upper quartile" = CO2e_per_ha_Q3,
+         "Farm emissions intensity - median" = CO2e_per_kg_med,
+         "Farm emissions intensity - lower quartile" = CO2e_per_kg_Q1,
+         "Farm emissions intensity - upper quartile" = CO2e_per_kg_Q3,
+         "Nitrogen surplus per hectare - median" = N_surplus_med,
+         "Nitrogen surplus per hectare - lower quartile" = N_surplus_Q1,
+         "Nitrogen surplus per hectare - upper quartile" = N_surplus_Q3,
+         "Nitrogen use efficiency - median" = nue_med,
+         "Nitrogen use efficiency - lower quartile" = nue_Q1,
+         "Nitrogen use efficiency - upper quartile" = nue_Q3
+         )
 
+## Create narrow dataset, for publication on opendata platform
+Combined_summary_narrow <- Combined_summary %>% 
+  gather(`Farm emissions per hectare - median`:`Nitrogen use efficiency - upper quartile`, key = "Measure", value = "Value") %>% 
+  mutate(FeatureCode = "S92000003",
+         Measurement = "Count",
+         Units = "Tonnes CO2 equivalent per hectare") %>% 
+  select(FeatureCode, DateCode, Farmtype, Measure, Measurement, Units, Value)
+
+## Add units, depending on value of Measure column.
+## Pretty messy way of doing this. A lookup table may have been better...
+Combined_summary_narrow <- Combined_summary_narrow %>% 
+  mutate(Units = ifelse(substr(Measure, 1, 26) =="Farm emissions per hectare", "Tonnes CO2 equivalent per hectare",
+                        ifelse(substr(Measure, 1, 24) =="Farm emissions intensity", "Tonnes CO2 equivalent per kilogram farm output",
+                               ifelse(substr(Measure, 1, 16) =="Nitrogen surplus", "Kilogrammes per hectare",
+                                      ifelse(substr(Measure, 1, 12) =="Nitrogen use", "Percent",
+                                             NA)))))
+##Change Measurement value to "Ratio" if Measure is NUE.
+Combined_summary_narrow$Measurement[substr(Combined_summary_narrow$Measure, 1, 12)=="Nitrogen use"] = "Ratio"
+
+#Output csv file
+write.csv(Combined_summary_narrow, 
+          file=paste0(Output_directory,"/farm-business-survey-environmental-data.csv"), 
+          row.names = FALSE) 
 
 
 
@@ -306,226 +348,3 @@ write_xlsx(list(CO2e_per_ha = Table_1, CO2e_per_kg = Table_2, N_surplus = Table_
 
 
 
-
-
-#### The code below was used for QA, and will possibly be deleted.
-##Leaving for now, commented out.
-
-# 
-# for (i in 1:8){
-#   check <- AllYears_carbon %>% 
-#     filter(type==i, sampyear==2022) %>% 
-#     mutate(calc_area = wf_co2/total_ha_co2)
-#   
-#   Q1 <- weighted.quantile(check$total_ha_co2, check$fbswt,0.25)
-#   Q2 <- weighted.median(check$total_ha_co2, check$fbswt)
-#   Q3 <- weighted.quantile(check$total_ha_co2, check$fbswt,0.75)
-#   mean_ind <- weighted.mean(check$total_ha_co2, check$fbswt)
-#   mean_rat <- sum(check$wf_co2 * check$fbswt)/sum(check$fa_aua*check$fbswt)
-#   
-#   # check <- check %>%
-#   #   filter(total_wf_co2<1000)
-#   # # check<- check %>%
-#   #   filter(total_wf_co2<0.95*max(check$total_wf_co2),
-#   #          total_wf_co2 > 0)
-#   g=ggplot(check) +
-#     geom_histogram(aes(x=total_ha_co2, weight=fbswt))+
-#     geom_vline(xintercept = Q1,colour="red")+
-#     geom_vline(xintercept = Q2,colour="red")+
-#     geom_vline(xintercept = Q3,colour="red")+
-#     geom_vline(xintercept = mean_ind,colour="blue")+
-#     geom_vline(xintercept = mean_rat,colour="yellow")+
-#     annotate(x = Q1, y= 0, label = "Q1", geom = "label",colour="red")+
-#     annotate(x = Q2, y= 0, label = "Q2", geom = "label",colour="red")+
-#     annotate(x = Q3, y= 0, label = "Q3", geom = "label",colour="red")+
-#     annotate(x = mean_ind, y=0, label = "Mean_ind.", geom = "label",colour="blue")+
-#     annotate(x = mean_rat, y= 0, label = "Mean_ratio", geom = "label",colour="yellow")+
-#     labs(title=paste0(fbs_type_words[i]))
-#   print(g)
-# }
-# ggplot(filter(AllYears_carbon,type==1, abs(total_wf_co2)<10)) +
-#   geom_histogram(aes(total_wf_co2,weight=fbswt))
-# ggplot(filter(AllYears_carbon,type==5,total_wf_co2>-10,total_wf_co2<100)) +
-#   geom_histogram(aes(total_wf_co2,weight=fbswt))
-# AllYears_carbon$livestock="No"
-# AllYears_carbon$livestock[AllYears_carbon$type %in% 3:7]="Yes"
-# 
-# check <- AllYears_carbon %>%
-#   # filter(type %in% 4:7) %>%
-#   select(fa_id, livestock,fbswt, wf_co2, total_wf_co2,farm_output_kg, type,fa_outpt,sampyear) %>%
-#   mutate(out_extra = farm_output_kg-fa_outpt/4)
-# 
-# check_sum <- check %>%
-#   group_by(sampyear, livestock) %>%
-#   summarise("Mean output (£)" = weighted.mean(fa_outpt, fbswt),
-#             "Mean output (kg)" = weighted.mean(farm_output_kg, fbswt),
-#             "Mean CO2e/kg-output (kg/kg)" = weighted.mean(total_wf_co2, fbswt),
-#             "Mean CO2e (kg)" = weighted.mean(wf_co2, fbswt),
-#             "Sum output (£)" = sum(fa_outpt*fbswt),
-#             "Sum output (kg)" = sum(farm_output_kg*fbswt),
-#             "Sum CO2e (kg)" = sum(wf_co2*fbswt)) %>%
-#   mutate(ratio = `Sum CO2e (kg)`/`Sum output (kg)`)
-# 
-# check_quantiles <- check %>%
-#   group_by(livestock, sampyear) %>%
-#   summarise(D1 = weighted.quantile(total_wf_co2, fbswt, 0.167),
-#             D2 = weighted.quantile(total_wf_co2, fbswt, 0.2),
-#             D3 = weighted.quantile(total_wf_co2, fbswt, 0.3),
-#             D4 = weighted.quantile(total_wf_co2, fbswt, 0.4),
-#             D5 = weighted.quantile(total_wf_co2, fbswt, 0.5),
-#             D6 = weighted.quantile(total_wf_co2, fbswt, 0.6),
-#             D7 = weighted.quantile(total_wf_co2, fbswt, 0.7),
-#             D8 = weighted.quantile(total_wf_co2, fbswt, 0.8),
-#             D9 = weighted.quantile(total_wf_co2, fbswt, 0.9)
-#   )
-# check_quantiles2 <- check %>%
-#   group_by(livestock, sampyear) %>%
-#   summarise(D1 = weighted.quantile(wf_co2, fbswt, 0.1),
-#             D2 = weighted.quantile(wf_co2, fbswt, 0.2),
-#             D3 = weighted.quantile(wf_co2, fbswt, 0.3),
-#             D4 = weighted.quantile(wf_co2, fbswt, 0.4),
-#             D5 = weighted.quantile(wf_co2, fbswt, 0.5),
-#             D6 = weighted.quantile(wf_co2, fbswt, 0.6),
-#             D7 = weighted.quantile(wf_co2, fbswt, 0.7),
-#             D8 = weighted.quantile(wf_co2, fbswt, 0.8),
-#             D9 = weighted.quantile(wf_co2, fbswt, 0.9)
-#   )
-# 
-# check_quantiles3 <- check %>%
-#   group_by(livestock, sampyear) %>%
-#   summarise(D1 = weighted.quantile(farm_output_kg, fbswt, 0.1),
-#             D2 = weighted.quantile(farm_output_kg, fbswt, 0.2),
-#             D3 = weighted.quantile(farm_output_kg, fbswt, 0.3),
-#             D4 = weighted.quantile(farm_output_kg, fbswt, 0.4),
-#             D5 = weighted.quantile(farm_output_kg, fbswt, 0.5),
-#             D6 = weighted.quantile(farm_output_kg, fbswt, 0.6),
-#             D7 = weighted.quantile(farm_output_kg, fbswt, 0.7),
-#             D8 = weighted.quantile(farm_output_kg, fbswt, 0.8),
-#             D9 = weighted.quantile(farm_output_kg, fbswt, 0.9)
-#   )
-# 
-# median_2020 <- filter(AllYears_carbon, sampyear==2020)
-# median_2020 <- weighted.median(median_2020$total_wf_co2, median_2020$fbswt)
-# median_2021 <- filter(AllYears_carbon, sampyear==2021)
-# median_2021 <- weighted.median(median_2021$total_wf_co2, median_2021$fbswt)
-# median_2022 <- filter(AllYears_carbon, sampyear==2022)
-# median_2022 <- weighted.median(median_2022$total_wf_co2, median_2022$fbswt)
-# 
-# 
-# ggplot(filter(AllYears_carbon,type %in% 4:7))+
-#   geom_density(aes(x= total_wf_co2, colour=as.factor(sampyear),weight=fbswt)) +
-#   xlim(0,100)+
-#   ylim(0,0.05)
-# # ggplot(AllYears_carbon,aes(x=total_wf_co2, weight=fbswt))+
-# #   stat_ewcdf(geom="step")+
-# #   scale_x_continuous(limits=c(-29,50))+
-# #   geom_vline(xintercept=median_2020,colour="red")+
-# #   geom_vline(xintercept = median_2021, colour = "green") +
-# #   geom_vline(xintercept = median_2022, colour = "blue")
-# 
-# check2 <- AllYears_carbon[order(AllYears_carbon$total_wf_co2),]
-# check3 <- check2 %>%
-#   group_by(sampyear) %>%
-#   mutate(cum.pct = cumsum(fbswt)/sum(fbswt))
-# 
-# ggplot(filter(check3))+
-#   geom_hline(yintercept = 0.5*6500, colour="grey")+
-#   geom_histogram(aes(x=total_wf_co2, weight=fbswt, fill=as.factor(sampyear)),position="dodge")+
-#   geom_line(aes(x=total_wf_co2, y=cum.pct*6500, colour=as.factor(sampyear)))+
-#   scale_x_continuous(limits=c(-5,50))+
-#   geom_vline(xintercept=median_2020,colour="red")+
-#   geom_vline(xintercept = median_2021, colour = "green") +
-#   geom_vline(xintercept = median_2022, colour = "blue") +
-#   scale_y_continuous(name="Weighted count", sec.axis = sec_axis(~.*(1/6500), name="Cumulative distribution", breaks=c(0,0.25,0.5,1)))
-# 
-# ggplot(filter(AllYears_carbon, livestock=="Yes"))+
-#   geom_point(aes(x=fa_outpt,y=farm_output_kg, colour = as.factor(type)))
-# 
-# check10 <- AllYears_carbon %>%
-#   filter(type==5, total_wf_co2<5) %>%
-#   group_by(sampyear) %>%
-#   summarise(low_count = n(), fbswt_sum = sum(fbswt))
-# check20 <- AllYears_carbon %>%
-#   filter(type%in% 4:7, total_wf_co2<50, sampyear==2020) %>%
-#   mutate(farmid = round(fa_id/10000,0))
-# check20a <- AllYears_carbon %>%
-#   mutate(farmid=round(fa_id/10000,0)) %>%
-#   filter(farmid %in% check20$farmid)
-# ggplot(check20a)+
-#   geom_point(aes(x=total_wf_co2, y= farm_output_kg, colour=as.factor(sampyear)))+
-#   xlim(0,NA)
-# check21 <- AllYears_carbon %>%
-#   filter(type%in% 4:7, total_wf_co2<50, sampyear==2021) %>%
-#   mutate(farmid = round(fa_id/10000,0))
-# check21a <- AllYears_carbon %>%
-#   mutate(farmid=round(fa_id/10000,0)) %>%
-#   filter(farmid %in% check21$farmid)
-# ggplot(check21a)+
-#   geom_point(aes(x=wf_co2, y= farm_output_kg, colour=as.factor(sampyear)))+
-# xlim(0,NA)
-# check22 <- AllYears_carbon %>%
-#   filter(type%in% 4:7, total_wf_co2<50, sampyear==2022) %>%
-#   mutate(farmid = round(fa_id/10000,0))
-# check22a <- AllYears_carbon %>%
-#   mutate(farmid=round(fa_id/10000,0)) %>%
-#   filter(farmid %in% check22$farmid)
-# 
-# ggplot(check21a)+
-#   geom_point(aes(x=wf_co2, y= farm_output_kg, colour=as.factor(sampyear)))+
-#   xlim(0,NA)
-# 
-# 
-# check40 <- AllYears_carbon %>%
-#   filter(type %in% 4:7) %>%
-#   mutate(include=0)
-# check40$include[check40$total_wf_co2<4]=1
-# # check40$include[check40$total_wf_co2<8]=2
-# check40$include[check40$sampyear==2022 & check40$total_wf_co2<12]=1
-# check41<-check40 %>%
-#   filter(include==1,farm_output_kg>0) %>%
-#   group_by(sampyear,include) %>%
-#   summarise(sumfbswt=sum(fbswt), count=n())
-# ggplot(filter(check40,include==1))+
-#   geom_point(aes(x=fa_outpt, y=farm_output_kg, colour=as.factor(sampyear)))+
-#   xlim(0,NA)
-# 
-# 
-# 
-# ggplot(filter(AllYears_carbon, type %in% 4:7))+
-#   geom_point(aes(x=fa_outpt, y=farm_output_kg, colour=as.factor(sampyear)))
-# ggplot(filter(AllYears_carbon, type %in% 4:7))+
-#   geom_density(aes(weight=fbswt,x=total_wf_co2, colour=as.factor(sampyear)),position="dodge")+
-#   xlim(0,50)
-# ggplot(filter(AllYears_carbon))+
-#   geom_density(aes(x=total_wf_co2, colour=as.factor(livestock)),position="dodge")+
-#   xlim(0,50)
-# 
-# 
-# check50<-AllYears_carbon %>%
-#   filter(type %in% 4:7) %>%
-#   mutate(farmid=round(fa_id/10000,0)) %>%
-#   select(farmid,sampyear,farm_output_kg) %>%
-#   spread(key=sampyear,value=farm_output_kg) %>%
-#   filter(`2020`>0,
-#          `2021`>0,
-#          `2022`>0) %>%
-#   mutate(outlier_test = `2021`/`2020`,
-#          outlier_test_2 = `2021`/`2022`,
-#          outlier_test_3 = `2021`/(0.5*(`2020`+`2022`))) %>%
-#   filter(outlier_test >1,
-#          outlier_test_2>1)
-# 
-# check60<-AllYears_carbon %>%
-#   filter(type %in% 4:7) %>%
-#   mutate(farmid=round(fa_id/10000,0)) %>%
-#   select(farmid,sampyear,total_wf_co2) %>%
-#   spread(key=sampyear,value=total_wf_co2) %>%
-#   filter(is.na(`2022`)==T,
-#          `2021`>0,
-#          `2020`>0,
-#          `2021`<10,
-#          `2020`>10) %>%
-#   mutate(outliyingness = `2021`/((`2020`)))
-# 
-# check70 <- AllYears_carbon %>%
-#   filter(round(fa_id/10000,0) %in% c(13179,12188,13811,12877))
