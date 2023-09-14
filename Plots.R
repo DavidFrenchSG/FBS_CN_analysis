@@ -1,5 +1,5 @@
 #Separate script for creating charts
-source('resas_theme.R')
+source("resas_theme.R")
 # Defining a function which rounds in an expected way (rather than, eg,  rounding 53.2500 to 53.2).
 round2 <- function(x, n) {
   posneg = sign(x)
@@ -59,6 +59,7 @@ output_plot_pub <- function(i, title_label, quantity_label, y_label, colour_code
     geom_point(aes(x=`Year`, y=Median)) +
     geom_errorbar(aes(x=`Year`, ymin=Q1, ymax = Q3, width=0.25)) +
     xlab(element_blank())+
+    scale_y_continuous(expand=c(0,0))+
     # labs(title = paste0(title_label))+
     {if(NUE_flag==T)geom_text(aes(x=`Year`, y=Median, vjust=-0.5, hjust=-0.08, label=paste0(format(round2(Median,0), nsmall=0),"%")), colour="Black", size=12, fontface="bold")}+
     {if(NUE_flag==F)geom_text(aes(x=`Year`, y=Median, vjust=-0.5, hjust=-0.08, label=format(round2(Median,1), nsmall=1)), colour="Black", size=12, fontface="bold")}+
@@ -70,18 +71,27 @@ output_plot_pub <- function(i, title_label, quantity_label, y_label, colour_code
 
 #Use the modified function to create plots for publication
 g_co2perha_pub <- output_plot_pub(9, "Absolute emissions", "t CO2-e per ha", "t CO"[2]~"-e / ha")
-plot(g_co2perha_pub)
+# plot(g_co2perha_pub)
 g_co2perkg_pub <- output_plot_pub(9, "Emission intensity", "kg CO2-e per kg output", "kg CO"[2]~"-e / kg output")
-plot(g_co2perkg_pub)
+# plot(g_co2perkg_pub)
 g_Nsurplus_pub <- output_plot_pub(9, "Nitrogen balance", "Nitrogen surplus (kg)", "kg N surplus / ha", "#6EA022")
-plot(g_Nsurplus_pub)
+# plot(g_Nsurplus_pub)
 g_NUE_pub <- output_plot_pub(9, "Nitrogen use efficiency", "Nitrogen use efficiency (%)", "NUE (%)", "#6EA022", NUE_flag = T)
-plot(g_NUE_pub)
+# plot(g_NUE_pub)
 #Save as SVG files
-SVGHeight <- 5
 SVGWidth <- 9
+SVGHeight <- SVGWidth * (5/9)
 ggsave(file="co2perha_pub.svg", plot=g_co2perha_pub, width=SVGWidth, height=SVGHeight)
 ggsave(file="co2perkg_pub.svg", plot=g_co2perkg_pub, width=SVGWidth, height=SVGHeight)
 ggsave(file="Nsurplus_pub.svg", plot=g_Nsurplus_pub, width=SVGWidth, height=SVGHeight)
 ggsave(file="NUE_pub.svg", plot=g_NUE_pub, width=SVGWidth, height=SVGHeight)
 
+new_outputs <- c("Cereal", "General Cropping", "Dairy", "Less favoured area (LFA) livestock", "Mixed")
+ggplot(filter(Master_plots, Quantity=="t CO2-e per ha", Year=="2021-22", `Farm type` %in% new_outputs))+
+  geom_point(aes(y=`Farm type`, x=`Median`))+
+  geom_errorbar(aes(y=`Farm type`, xmin=Q1, xmax = Q3))+
+  ylab(element_blank())+
+  xlab("Tonnes CO2-e per hectare")+
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.major.x = element_line(colour = "grey85"))+
+  geom_vline(xintercept=0, colour="grey85")
