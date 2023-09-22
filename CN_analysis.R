@@ -13,8 +13,8 @@ Output_directory <- '//s0177a/datashare/seerad/fas/raw_data/prod2022/Sefari_outp
 #Variables for farmtype names and numbering
 fbs_type_numbers <- c(1:10)
 ## The "[1]" after "All farm types" is a deliberate footnote.
-# fbs_type_words <- c("Cereal","General Cropping","Dairy","LFA Sheep","LFA Cattle","LFA Cattle and Sheep","Lowland Livestock","Mixed","All farm types [1]", "Less favoured area (LFA) livestock")
-fbs_type_words <- c("Cereal","General Cropping","Dairy","LFA Sheep","LFA Cattle","LFA Cattle and Sheep","Lowland Livestock","Mixed","All Farm Types", "Less favoured area (LFA) Livestock")
+# fbs_type_words <- c("Cereal", "General Cropping", "Dairy", "Specialist Sheep (LFA)", "Specialist Cattle (LFA)", "Cattle and Sheep (LFA)", "Lowland Cattle and Sheep", "Mixed", "All Types [1]", "Less favoured area (LFA) Livestock")
+fbs_type_words <- c("Cereal", "General Cropping", "Dairy", "Specialist Sheep (LFA)", "Specialist Cattle (LFA)", "Cattle and Sheep (LFA)", "Lowland Cattle and Sheep", "Mixed", "All Types", "Less favoured area (LFA) Livestock")
 fbs_type_tab <- data.frame(fbs_type_numbers, fbs_type_words)
 apply_type_formats <- function(table_name) {
   setkey(setDT(table_name),type)
@@ -100,6 +100,7 @@ for (sampyear in sampyear_range){
   for (x in colnames(FBS_nue_data)){
     attr(FBS_nue_data[[deparse(as.name(x))]],"format.sas")=NULL
   }
+  
   #Process NUE data
   #The dataset contains two entries for each farm - we want the "NNKG" entry, which has the raw totals. 
   #The other entry (an_code=NNGH) has values per hectare.
@@ -131,6 +132,7 @@ FBS_weights <- tryCatch(
     return(read_sas(FBS_weights_file))
   }
 )
+
 ##Basic data cleaning - convert all column names to lower case and strip sas formatting
 names(FBS_weights) <- tolower(names(FBS_weights))
 for (x in colnames(FBS_weights)){
@@ -263,22 +265,21 @@ write.csv(Nitrogen_summary,
 
 
 #Create a combined summary table and csv for the open data platform
-
 Combined_summary <- Carbon_summary %>% 
   left_join(Nitrogen_summary, by=c("sampyear", "farmtype", "type")) %>% 
   filter(type %in% Output_types) %>% 
   mutate(DateCode=paste0(sampyear-1,"/",sampyear)) %>% 
   select(Farmtype=farmtype,
          DateCode,
-         "Farm emissions per hectare - median" = CO2e_per_ha_med,
-         "Farm emissions per hectare - lower quartile" = CO2e_per_ha_Q1,
-         "Farm emissions per hectare - upper quartile" = CO2e_per_ha_Q3,
-         "Farm emissions intensity - median" = CO2e_per_kg_med,
-         "Farm emissions intensity - lower quartile" = CO2e_per_kg_Q1,
-         "Farm emissions intensity - upper quartile" = CO2e_per_kg_Q3,
-         "Nitrogen surplus per hectare - median" = N_surplus_med,
-         "Nitrogen surplus per hectare - lower quartile" = N_surplus_Q1,
-         "Nitrogen surplus per hectare - upper quartile" = N_surplus_Q3,
+         "Absolute emissions - median" = CO2e_per_ha_med,
+         "Absolute emissions - lower quartile" = CO2e_per_ha_Q1,
+         "Absolute emissions - upper quartile" = CO2e_per_ha_Q3,
+         "Emissions intensity - median" = CO2e_per_kg_med,
+         "Emissions intensity - lower quartile" = CO2e_per_kg_Q1,
+         "Emissions intensity - upper quartile" = CO2e_per_kg_Q3,
+         "Nitrogen surplus - median" = N_surplus_med,
+         "Nitrogen surplus - lower quartile" = N_surplus_Q1,
+         "Nitrogen surplus - upper quartile" = N_surplus_Q3,
          "Nitrogen use efficiency - median" = nue_med,
          "Nitrogen use efficiency - lower quartile" = nue_Q1,
          "Nitrogen use efficiency - upper quartile" = nue_Q3
@@ -286,24 +287,23 @@ Combined_summary <- Carbon_summary %>%
 
 ## Create narrow dataset, for publication on opendata platform
 Combined_summary_narrow <- Combined_summary %>% 
-  gather(`Farm emissions per hectare - median`:`Nitrogen use efficiency - upper quartile`, key = "Measure", value = "Value") %>% 
+  gather(`Absolute emissions - median`:`Nitrogen use efficiency - upper quartile`, key = "Measure", value = "Value") %>% 
   mutate(FeatureCode = "S92000003",
          Measurement = "Count",
          Units = "Tonnes CO2 equivalent per hectare") %>% 
-  select(FeatureCode, DateCode, Farmtype, Measure, Measurement, Units, Value)
-
-## Add units, depending on value of Measure column.
-## Pretty messy way of doing this. A lookup table may have been better...
+  select(FeatureCode, DateCode, "Farm type" = Farmtype, Measure, Measurement, Units, Value)
+### Add units, depending on value of Measure column.
+### Pretty messy way of doing this. A lookup table may have been better...
 Combined_summary_narrow <- Combined_summary_narrow %>% 
-  mutate(Units = ifelse(substr(Measure, 1, 26) =="Farm emissions per hectare", "Tonnes CO2 equivalent per hectare",
-                        ifelse(substr(Measure, 1, 24) =="Farm emissions intensity", "Tonnes CO2 equivalent per kilogram farm output",
+  mutate(Units = ifelse(substr(Measure, 1, 18) =="Absolute emissions", "Tonnes CO2 equivalent per hectare",
+                        ifelse(substr(Measure, 1, 29) =="Emissions intensity", "Tonnes CO2 equivalent per kilogram farm output",
                                ifelse(substr(Measure, 1, 16) =="Nitrogen surplus", "Kilogrammes per hectare",
                                       ifelse(substr(Measure, 1, 12) =="Nitrogen use", "Percent",
                                              NA)))))
-##Change Measurement value to "Ratio" if Measure is NUE.
+### Change Measurement value to "Ratio" if Measure is NUE.
 Combined_summary_narrow$Measurement[substr(Combined_summary_narrow$Measure, 1, 12)=="Nitrogen use"] = "Ratio"
 
-#Output csv file
+### Output csv file; this is what gets uploaded to the open data platform
 write.csv(Combined_summary_narrow, 
           file=paste0(Output_directory,"/farm-business-survey-environmental-data.csv"), 
           row.names = FALSE) 
