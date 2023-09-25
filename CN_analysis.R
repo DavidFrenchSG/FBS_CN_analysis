@@ -8,7 +8,7 @@ library(gridExtra)
 library(grid)
 ##Specify the locations of the data to be read in (SAS drive) and where outputs should go (currently the Z drive.)
 FBS_directory_path <- '//s0177a/sasdata1/ags/fas/'
-Output_directory <- '//s0177a/datashare/seerad/fas/raw_data/prod2022/Sefari_outputs'
+Output_directory <- paste0('//s0177a/datashare/seerad/fas/raw_data/prod',max(cropyear_range)+1,'/Sefari_outputs/')
 
 #Variables for farmtype names and numbering
 fbs_type_numbers <- c(1:10)
@@ -271,23 +271,23 @@ Combined_summary <- Carbon_summary %>%
   mutate(DateCode=paste0(sampyear-1,"/",sampyear)) %>% 
   select(Farmtype=farmtype,
          DateCode,
-         "Absolute emissions - median" = CO2e_per_ha_med,
-         "Absolute emissions - lower quartile" = CO2e_per_ha_Q1,
-         "Absolute emissions - upper quartile" = CO2e_per_ha_Q3,
-         "Emissions intensity - median" = CO2e_per_kg_med,
-         "Emissions intensity - lower quartile" = CO2e_per_kg_Q1,
-         "Emissions intensity - upper quartile" = CO2e_per_kg_Q3,
-         "Nitrogen surplus - median" = N_surplus_med,
-         "Nitrogen surplus - lower quartile" = N_surplus_Q1,
-         "Nitrogen surplus - upper quartile" = N_surplus_Q3,
-         "Nitrogen use efficiency - median" = nue_med,
-         "Nitrogen use efficiency - lower quartile" = nue_Q1,
-         "Nitrogen use efficiency - upper quartile" = nue_Q3
+         "Average farm absolute GHG emissions per hectare - median" = CO2e_per_ha_med,
+         "Average farm absolute GHG emissions per hectare - lower quartile" = CO2e_per_ha_Q1,
+         "Average farm absolute GHG emissions per hectare - upper quartile" = CO2e_per_ha_Q3,
+         "Average farm emission intensity from GHG - median" = CO2e_per_kg_med,
+         "Average farm emission intensity from GHG - lower quartile" = CO2e_per_kg_Q1,
+         "Average farm emission intensity from GHG - upper quartile" = CO2e_per_kg_Q3,
+         "Average farm nitrogen balance - median" = N_surplus_med,
+         "Average farm nitrogen balance - lower quartile" = N_surplus_Q1,
+         "Average farm nitrogen balance - upper quartile" = N_surplus_Q3,
+         "Average farm nitrogen use efficiency - median" = nue_med,
+         "Average farm nitrogen use efficiency - lower quartile" = nue_Q1,
+         "Average farm nitrogen use efficiency - upper quartile" = nue_Q3
          )
 
 ## Create narrow dataset, for publication on opendata platform
 Combined_summary_narrow <- Combined_summary %>% 
-  gather(`Absolute emissions - median`:`Nitrogen use efficiency - upper quartile`, key = "Measure", value = "Value") %>% 
+  gather(`Average farm absolute GHG emissions per hectare - median`:`Average farm nitrogen use efficiency - upper quartile`, key = "Measure", value = "Value") %>% 
   mutate(FeatureCode = "S92000003",
          Measurement = "Count",
          Units = "Tonnes CO2 equivalent per hectare") %>% 
@@ -295,10 +295,10 @@ Combined_summary_narrow <- Combined_summary %>%
 ### Add units, depending on value of Measure column.
 ### Pretty messy way of doing this. A lookup table may have been better...
 Combined_summary_narrow <- Combined_summary_narrow %>% 
-  mutate(Units = ifelse(substr(Measure, 1, 18) =="Absolute emissions", "Tonnes CO2 equivalent per hectare",
-                        ifelse(substr(Measure, 1, 29) =="Emissions intensity", "Tonnes CO2 equivalent per kilogram farm output",
-                               ifelse(substr(Measure, 1, 16) =="Nitrogen surplus", "Kilogrammes per hectare",
-                                      ifelse(substr(Measure, 1, 12) =="Nitrogen use", "Percent",
+  mutate(Units = ifelse(substr(Measure, 1, 21) =="Average farm absolute", "Tonnes CO2 equivalent per hectare",
+                        ifelse(substr(Measure, 1, 21) =="Average farm emission", "Tonnes CO2 equivalent per kilogram farm output",
+                               ifelse(substr(Measure, 1, 29) =="Average farm nitrogen balance", "Kilogrammes per hectare",
+                                      ifelse(substr(Measure, 1, 25) =="Average farm nitrogen use", "Percent",
                                              NA)))))
 ### Change Measurement value to "Ratio" if Measure is NUE.
 Combined_summary_narrow$Measurement[substr(Combined_summary_narrow$Measure, 1, 12)=="Nitrogen use"] = "Ratio"
