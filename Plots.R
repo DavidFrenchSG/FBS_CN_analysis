@@ -37,7 +37,7 @@ Master_plots$facet_order = factor(Master_plots$Quantity,
 
 # Function for creating the four plots for each type - for use in the visual summary
 # The input arguments are the type, quantity to be plotted, label for the y-axis and the rgb colour code.
-# A default colour code (#23A845, one of the standard Resas greens) is included.
+# A default colour code (one of the standard Resas greens) is included.
 output_plot <- function(i, title_label, quantity_label, y_label, colour_code="#00833E"){
   output_plot <- ggplot(filter(Master_plots, `Farm type`==fbs_type_words[i], Quantity == quantity_label)) +
     geom_col(aes(x=`Year`, y=Median), fill=colour_code) +
